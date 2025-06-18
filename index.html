@@ -82,12 +82,20 @@
         </div>
          <div>
             <label for="gravityConstant">Gravitational Constant</label>
-            <!-- CHANGE: Adjusted range and default for G -->
             <input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10">
+        </div>
+        <!-- NEW: Orbital Velocity Slider -->
+        <div>
+            <label for="orbitalVelocity">Orbital Velocity %</label>
+            <input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01">
+        </div>
+        <!-- NEW: Comets Slider -->
+        <div>
+            <label for="cometCount">Number of Comets</label>
+            <input type="range" id="cometCount" min="0" max="50" value="5" step="1">
         </div>
         <div>
             <label for="simSpeed">Simulation Speed (Years/Frame)</label>
-            <!-- CHANGE: Increased default simulation speed -->
             <input type="range" id="simSpeed" min="1" max="50" value="20" step="1">
         </div>
 
@@ -95,7 +103,6 @@
 
         <div class="info-box">
             <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
-            <!-- CHANGE: Clarified mass units -->
             <p><strong>Largest Body Mass (units):</strong> <span id="largestBodyMass">0</span></p>
             <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
         </div>
@@ -110,6 +117,8 @@
         const diskDensitySlider = document.getElementById('diskDensity');
         const dustSizeSlider = document.getElementById('dustSize');
         const gravitySlider = document.getElementById('gravityConstant');
+        const orbitalVelocitySlider = document.getElementById('orbitalVelocity'); // New slider
+        const cometCountSlider = document.getElementById('cometCount'); // New slider
         const simSpeedSlider = document.getElementById('simSpeed');
         const resetButton = document.getElementById('resetButton');
         const timeElapsedEl = document.getElementById('timeElapsed');
@@ -121,7 +130,7 @@
         let simulationTime = 0;
         
         // --- Simulation Parameters ---
-        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, SIMULATION_SPEED;
+        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, SIMULATION_SPEED;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -132,7 +141,6 @@
             constructor(x, y, mass, radius) {
                 this.x = x;
                 this.y = y;
-                // CHANGE: Mass is now a simple simulation unit, not kg
                 this.mass = mass;
                 this.radius = radius;
             }
@@ -154,15 +162,15 @@
         }
 
         class Particle {
-            constructor(x, y, radius, color) {
+            constructor(x, y, radius, color, isComet = false) {
                 this.x = x;
                 this.y = y;
                 this.vx = 0;
                 this.vy = 0;
                 this.radius = radius;
-                // CHANGE: Mass is based on area, no huge constants
                 this.mass = Math.PI * this.radius * this.radius;
                 this.color = color;
+                this.isComet = isComet;
                 this.collided = false;
             }
 
@@ -170,7 +178,8 @@
                 ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = this.color;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+                // Comets get a different colored glow
+                ctx.shadowColor = this.isComet ? 'rgba(180, 220, 255, 0.9)' : 'rgba(255, 255, 255, 0.7)';
                 ctx.shadowBlur = this.radius * 1.5 + 2;
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
@@ -188,9 +197,7 @@
                     return;
                 }
 
-                // The particle's own mass cancels out for acceleration, so we don't need to use it here.
                 const acceleration = (G * star.mass) / distSq;
-                
                 const ax = acceleration * (dx / dist);
                 const ay = acceleration * (dy / dist);
 
@@ -211,12 +218,13 @@
 
             resizeCanvas();
             
-            // Read all parameters from sliders
             STAR_MASS = parseFloat(starMassSlider.value);
             NUM_PARTICLES = parseInt(diskDensitySlider.value);
             INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
             G = parseFloat(gravitySlider.value);
-            
+            ORBITAL_VELOCITY_FACTOR = parseFloat(orbitalVelocitySlider.value);
+            NUM_COMETS = parseInt(cometCountSlider.value);
+
             simulationTime = 0;
             
             // Update labels on init to match default slider values
@@ -224,8 +232,9 @@
             document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${NUM_PARTICLES} Particles)`;
             document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)} Radius)`;
             document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${G})`;
+            document.querySelector('label[for="orbitalVelocity"]').textContent = `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR * 100).toFixed(0)}%)`;
+            document.querySelector('label[for="cometCount"]').textContent = `Number of Comets (${NUM_COMETS})`;
             document.querySelector('label[for="simSpeed"]').textContent = `Simulation Speed (${simSpeedSlider.value} Years/Frame)`;
-
 
             updateInfoPanel();
 
@@ -236,24 +245,34 @@
             particles = [];
 
             const maxDist = Math.min(centerX, centerY) * 0.8;
-            const minDist = star.radius * 4; // Increased min dist slightly
+            const minDist = star.radius * 4;
 
+            // Create disk particles
             for (let i = 0; i < NUM_PARTICLES; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const dist = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist;
                 const x = centerX + Math.cos(angle) * dist;
                 const y = centerY + Math.sin(angle) * dist;
-                
                 const radius = (Math.random() * 0.5 + 0.5) * INITIAL_DUST_SIZE;
-                const color = 'white'; 
-                
-                let p = new Particle(x, y, radius, color);
-
-                // Recalculate orbital velocity with new physics units
+                const p = new Particle(x, y, radius, 'white');
                 const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
-                p.vx = -Math.sin(angle) * orbitalVelocity * 0.9; // Make it slightly sub-keplerian to encourage decay
-                p.vy = Math.cos(angle) * orbitalVelocity * 0.9;
-                
+                p.vx = -Math.sin(angle) * orbitalVelocity * ORBITAL_VELOCITY_FACTOR;
+                p.vy = Math.cos(angle) * orbitalVelocity * ORBITAL_VELOCITY_FACTOR;
+                particles.push(p);
+            }
+
+            // Create comets
+            for (let i = 0; i < NUM_COMETS; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = (Math.random() * 0.2 + 0.8) * maxDist; // Start them further out
+                const x = centerX + Math.cos(angle) * dist;
+                const y = centerY + Math.sin(angle) * dist;
+                const radius = (Math.random() * 0.5 + 1.0) * INITIAL_DUST_SIZE; // Comets are a bit larger
+                const p = new Particle(x, y, radius, '#cceeff', true); // Light cyan color, isComet = true
+                const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
+                const cometVelocityFactor = 1.4; // Higher velocity for elliptical orbit
+                p.vx = -Math.sin(angle) * orbitalVelocity * cometVelocityFactor;
+                p.vy = Math.cos(angle) * orbitalVelocity * cometVelocityFactor;
                 particles.push(p);
             }
             
@@ -276,8 +295,6 @@
                         const newVy = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / totalMass;
                         const newX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / totalMass;
                         const newY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / totalMass;
-                        
-                        // New radius based on combined area
                         const newRadius = Math.sqrt(Math.pow(particles[i].radius, 2) + Math.pow(particles[j].radius, 2));
                         
                         particles[i].x = newX;
@@ -285,7 +302,7 @@
                         particles[i].vx = newVx;
                         particles[i].vy = newVy;
                         particles[i].radius = newRadius;
-                        particles[i].mass = totalMass; // Use totalMass directly
+                        particles[i].mass = totalMass;
                         particles[j].collided = true;
                     }
                 }
@@ -330,6 +347,8 @@
         diskDensitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Disk Density (${e.target.value} Particles)`; });
         dustSizeSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Initial Dust Size (${parseFloat(e.target.value).toFixed(1)} Radius)`; });
         gravitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gravitational Constant (${e.target.value})`; });
+        orbitalVelocitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Orbital Velocity % (${(parseFloat(e.target.value) * 100).toFixed(0)}%)`; });
+        cometCountSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Number of Comets (${e.target.value})`; });
         simSpeedSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Simulation Speed (${e.target.value} Years/Frame)`; });
 
         init();
