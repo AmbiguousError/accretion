@@ -67,7 +67,7 @@
         <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
         
         <div>
-            <label for="starMass">Star Mass (Solar Masses)</label>
+            <label for="starMass">Star Mass</label>
             <input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1">
         </div>
         
@@ -78,23 +78,25 @@
         
         <div>
             <label for="dustSize">Initial Dust Size (Radius)</label>
-            <!-- CHANGE: Increased default value for better visibility -->
             <input type="range" id="dustSize" min="0.5" max="3" value="2" step="0.1">
         </div>
          <div>
             <label for="gravityConstant">Gravitational Constant</label>
-            <input type="range" id="gravityConstant" min="1" max="20" value="5" step="1">
+            <!-- CHANGE: Adjusted range and default for G -->
+            <input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10">
         </div>
         <div>
             <label for="simSpeed">Simulation Speed (Years/Frame)</label>
-            <input type="range" id="simSpeed" min="1" max="50" value="10" step="1">
+            <!-- CHANGE: Increased default simulation speed -->
+            <input type="range" id="simSpeed" min="1" max="50" value="20" step="1">
         </div>
 
         <button id="resetButton">Reset Simulation</button>
 
         <div class="info-box">
             <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
-            <p><strong>Largest Body Mass:</strong> <span id="largestBodyMass">0</span> M⊕</p>
+            <!-- CHANGE: Clarified mass units -->
+            <p><strong>Largest Body Mass (units):</strong> <span id="largestBodyMass">0</span></p>
             <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
         </div>
     </div>
@@ -119,14 +121,7 @@
         let simulationTime = 0;
         
         // --- Simulation Parameters ---
-        let STAR_MASS = parseFloat(starMassSlider.value);
-        let NUM_PARTICLES = parseInt(diskDensitySlider.value);
-        let INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
-        let G = parseFloat(gravitySlider.value);
-        let SIMULATION_SPEED = parseInt(simSpeedSlider.value);
-
-        const EARTH_MASS_EQUIVALENT = 5.972e24;
-        const PARTICLE_BASE_MASS = 1e20;
+        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, SIMULATION_SPEED;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -137,7 +132,8 @@
             constructor(x, y, mass, radius) {
                 this.x = x;
                 this.y = y;
-                this.mass = mass * 1.989e30;
+                // CHANGE: Mass is now a simple simulation unit, not kg
+                this.mass = mass;
                 this.radius = radius;
             }
 
@@ -164,19 +160,18 @@
                 this.vx = 0;
                 this.vy = 0;
                 this.radius = radius;
-                this.mass = PARTICLE_BASE_MASS * Math.pow(this.radius, 3);
+                // CHANGE: Mass is based on area, no huge constants
+                this.mass = Math.PI * this.radius * this.radius;
                 this.color = color;
                 this.collided = false;
             }
 
             draw() {
-                // --- CHANGE: Added glow effect for particles ---
                 ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = this.color;
-                // Add a shadow to create a glow. The blur radius is based on the particle's size.
                 ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
-                ctx.shadowBlur = this.radius * 2 + 3;
+                ctx.shadowBlur = this.radius * 1.5 + 2;
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
@@ -193,9 +188,11 @@
                     return;
                 }
 
-                const force = G * this.mass * star.mass / distSq;
-                const ax = force * dx / dist / this.mass;
-                const ay = force * dy / dist / this.mass;
+                // The particle's own mass cancels out for acceleration, so we don't need to use it here.
+                const acceleration = (G * star.mass) / distSq;
+                
+                const ax = acceleration * (dx / dist);
+                const ay = acceleration * (dy / dist);
 
                 this.vx += ax;
                 this.vy += ay;
@@ -214,21 +211,23 @@
 
             resizeCanvas();
             
+            // Read all parameters from sliders
             STAR_MASS = parseFloat(starMassSlider.value);
             NUM_PARTICLES = parseInt(diskDensitySlider.value);
             INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
             G = parseFloat(gravitySlider.value);
             
             simulationTime = 0;
+            
             // Update labels on init to match default slider values
-            document.querySelector('label[for="starMass"]').textContent = `Star Mass (${parseFloat(starMassSlider.value).toFixed(1)} Solar Masses)`;
-            document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${diskDensitySlider.value} Particles)`;
-            document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${parseFloat(dustSizeSlider.value).toFixed(1)} Radius)`;
-            document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${gravitySlider.value})`;
+            document.querySelector('label[for="starMass"]').textContent = `Star Mass (${STAR_MASS.toFixed(1)})`;
+            document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${NUM_PARTICLES} Particles)`;
+            document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)} Radius)`;
+            document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${G})`;
             document.querySelector('label[for="simSpeed"]').textContent = `Simulation Speed (${simSpeedSlider.value} Years/Frame)`;
 
 
-            updateInfoPanel(); // Reset info panel text on init
+            updateInfoPanel();
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -237,7 +236,7 @@
             particles = [];
 
             const maxDist = Math.min(centerX, centerY) * 0.8;
-            const minDist = star.radius * 3;
+            const minDist = star.radius * 4; // Increased min dist slightly
 
             for (let i = 0; i < NUM_PARTICLES; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -250,9 +249,10 @@
                 
                 let p = new Particle(x, y, radius, color);
 
-                const orbitalVelocity = Math.sqrt(G * star.mass / dist);
-                p.vx = -Math.sin(angle) * orbitalVelocity * 0.7;
-                p.vy = Math.cos(angle) * orbitalVelocity * 0.7;
+                // Recalculate orbital velocity with new physics units
+                const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
+                p.vx = -Math.sin(angle) * orbitalVelocity * 0.9; // Make it slightly sub-keplerian to encourage decay
+                p.vy = Math.cos(angle) * orbitalVelocity * 0.9;
                 
                 particles.push(p);
             }
@@ -276,14 +276,16 @@
                         const newVy = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / totalMass;
                         const newX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / totalMass;
                         const newY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / totalMass;
-                        const newRadius = Math.cbrt(Math.pow(particles[i].radius, 3) + Math.pow(particles[j].radius, 3));
+                        
+                        // New radius based on combined area
+                        const newRadius = Math.sqrt(Math.pow(particles[i].radius, 2) + Math.pow(particles[j].radius, 2));
                         
                         particles[i].x = newX;
                         particles[i].y = newY;
                         particles[i].vx = newVx;
                         particles[i].vy = newVy;
                         particles[i].radius = newRadius;
-                        particles[i].mass = totalMass;
+                        particles[i].mass = totalMass; // Use totalMass directly
                         particles[j].collided = true;
                     }
                 }
@@ -297,13 +299,10 @@
                  largestMass = particles.reduce((max, p) => p.mass > max ? p.mass : max, 0);
             }
             
-            const largestMassInEarths = (largestMass / EARTH_MASS_EQUIVALENT).toFixed(2);
-            
             timeElapsedEl.textContent = Math.floor(simulationTime).toLocaleString();
-            largestBodyMassEl.textContent = largestMassInEarths;
+            largestBodyMassEl.textContent = largestMass.toFixed(2);
             particleCountEl.textContent = particles.length.toLocaleString();
         }
-
 
         function animate() {
             SIMULATION_SPEED = parseInt(simSpeedSlider.value);
@@ -324,30 +323,15 @@
         }
 
         // --- Event Listeners ---
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            init();
-        });
-        
+        window.addEventListener('resize', init);
         resetButton.addEventListener('click', init);
         
-        starMassSlider.addEventListener('input', (e) => {
-           e.target.previousElementSibling.textContent = `Star Mass (${parseFloat(e.target.value).toFixed(1)} Solar Masses)`;
-        });
-         diskDensitySlider.addEventListener('input', (e) => {
-           e.target.previousElementSibling.textContent = `Disk Density (${e.target.value} Particles)`;
-        });
-        dustSizeSlider.addEventListener('input', (e) => {
-           e.target.previousElementSibling.textContent = `Initial Dust Size (${parseFloat(e.target.value).toFixed(1)} Radius)`;
-        });
-         gravitySlider.addEventListener('input', (e) => {
-            e.target.previousElementSibling.textContent = `Gravitational Constant (${e.target.value})`;
-        });
-        simSpeedSlider.addEventListener('input', (e) => {
-            e.target.previousElementSibling.textContent = `Simulation Speed (${e.target.value} Years/Frame)`;
-        });
+        starMassSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Star Mass (${parseFloat(e.target.value).toFixed(1)})`; });
+        diskDensitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Disk Density (${e.target.value} Particles)`; });
+        dustSizeSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Initial Dust Size (${parseFloat(e.target.value).toFixed(1)} Radius)`; });
+        gravitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gravitational Constant (${e.target.value})`; });
+        simSpeedSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Simulation Speed (${e.target.value} Years/Frame)`; });
 
-        // Initialize the simulation on load
         init();
     </script>
 </body>
