@@ -44,7 +44,8 @@
             <div><label for="starMass">Star Mass</label><input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1"></div>
             <div><label for="diskDensity">Disk Density</label><input type="range" id="diskDensity" min="100" max="1500" value="700" step="50"></div>
             <div><label for="dustSize">Initial Dust Size</label><input type="range" id="dustSize" min="0.5" max="3" value="1.5" step="0.1"></div>
-            <div><label for="gravityConstant">Gravitational Constant</label><input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10"></div>
+            <!-- CORRECTED: Gravity constant is now much smaller to match new mass scale -->
+            <div><label for="gravityConstant">Gravitational Constant</label><input type="range" id="gravityConstant" min="0.1" max="10" value="1.5" step="0.1"></div>
             <div><label for="orbitalVelocity">Orbital Velocity %</label><input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01"></div>
             <div><label for="cometCount">Number of Comets</label><input type="range" id="cometCount" min="0" max="50" value="5" step="1"></div>
             <div><label for="gasDrag">Gas Drag</label><input type="range" id="gasDrag" min="0" max="0.001" value="0" step="0.00005"></div>
@@ -79,13 +80,38 @@
 
         const canvas=document.getElementById('simulationCanvas'),ctx=canvas.getContext('2d'),getEl=id=>document.getElementById(id),controlPanel=getEl('controlPanel'),minimizeButton=getEl('minimizeButton'),nBodyToggle=getEl('nBodyToggle'),thetaSlider=getEl('theta'),starMassSlider=getEl('starMass'),diskDensitySlider=getEl('diskDensity'),dustSizeSlider=getEl('dustSize'),gravitySlider=getEl('gravityConstant'),orbitalVelocitySlider=getEl('orbitalVelocity'),cometCountSlider=getEl('cometCount'),gasDragSlider=getEl('gasDrag'),resetButton=getEl('resetButton'),timeElapsedEl=getEl('timeElapsed'),largestBodyMassEl=getEl('largestBodyMass'),particleCountEl=getEl('particleCount');
         let particles=[],star,qt,animationFrameId,simulationTime=0,STAR_MASS,NUM_PARTICLES,INITIAL_DUST_SIZE,G,ORBITAL_VELOCITY_FACTOR,NUM_COMETS,GAS_DRAG_FACTOR,N_BODY_ENABLED,THETA,N_BODY_G;
-        const SOFTENING_FACTOR=15,SOFTENING_FACTOR_SQ=SOFTENING_FACTOR*SOFTENING_FACTOR;
+        const SOFTENING_FACTOR=20,SOFTENING_FACTOR_SQ=SOFTENING_FACTOR*SOFTENING_FACTOR;
 
-        function init(){if(animationFrameId)cancelAnimationFrame(animationFrameId);resizeCanvas();N_BODY_ENABLED=nBodyToggle.checked;THETA=parseFloat(thetaSlider.value);STAR_MASS=parseFloat(starMassSlider.value);NUM_PARTICLES=parseInt(diskDensitySlider.value);INITIAL_DUST_SIZE=parseFloat(dustSizeSlider.value);G=parseFloat(gravitySlider.value);N_BODY_G=G*0.05;ORBITAL_VELOCITY_FACTOR=parseFloat(orbitalVelocitySlider.value);NUM_COMETS=parseInt(cometCountSlider.value);GAS_DRAG_FACTOR=parseFloat(gasDragSlider.value);simulationTime=0;updateLabels();const cX=canvas.width/2,cY=canvas.height/2;star=new Star(cX,cY,STAR_MASS,15+(STAR_MASS-1)*5);particles=[];const maxDist=Math.min(cX,cY)*.8,minDist=star.radius*4;for(let i=0;i<NUM_PARTICLES;i++){const a=Math.random()*Math.PI*2,d=Math.sqrt(Math.random())*(maxDist-minDist)+minDist,x=cX+Math.cos(a)*d,y=cY+Math.sin(a)*d,r=(Math.random()*.5+.5)*INITIAL_DUST_SIZE,p=new Particle(x,y,r,'white');const oV=Math.sqrt(G*star.mass/d);p.vx=-Math.sin(a)*oV*ORBITAL_VELOCITY_FACTOR;p.vy=Math.cos(a)*oV*ORBITAL_VELOCITY_FACTOR;particles.push(p);}for(let i=0;i<NUM_COMETS;i++){const a=Math.random()*Math.PI*2,d=(Math.random()*.2+.8)*maxDist,x=cX+Math.cos(a)*d,y=cY+Math.sin(a)*d,r=(Math.random()*.5+1)*INITIAL_DUST_SIZE,p=new Particle(x,y,r,'#cceeff',!0);const oV=Math.sqrt(G*star.mass/d),cV=1.4;p.vx=-Math.sin(a)*oV*cV;p.vy=Math.cos(a)*oV*cV;particles.push(p);}animate();}
+        function init(){
+            if(animationFrameId)cancelAnimationFrame(animationFrameId);
+            resizeCanvas();
+            N_BODY_ENABLED=nBodyToggle.checked;
+            THETA=parseFloat(thetaSlider.value);
+            STAR_MASS=parseFloat(starMassSlider.value);
+            NUM_PARTICLES=parseInt(diskDensitySlider.value);
+            INITIAL_DUST_SIZE=parseFloat(dustSizeSlider.value);
+            G=parseFloat(gravitySlider.value);
+            // CORRECTED: N_BODY_G is now a fraction of the much smaller G.
+            N_BODY_G=G * 0.5; 
+            ORBITAL_VELOCITY_FACTOR=parseFloat(orbitalVelocitySlider.value);
+            NUM_COMETS=parseInt(cometCountSlider.value);
+            GAS_DRAG_FACTOR=parseFloat(gasDragSlider.value);
+            simulationTime=0;
+            updateLabels();
+            const cX=canvas.width/2,cY=canvas.height/2;
+            // CORRECTED: Star mass is now correctly scaled to be dominant.
+            const dominantStarMass = STAR_MASS * 10000;
+            star=new Star(cX,cY,dominantStarMass,15+(STAR_MASS-1)*5);
+            particles=[];
+            const maxDist=Math.min(cX,cY)*.8,minDist=star.radius*4;
+            for(let i=0;i<NUM_PARTICLES;i++){const a=Math.random()*Math.PI*2,d=Math.sqrt(Math.random())*(maxDist-minDist)+minDist,x=cX+Math.cos(a)*d,y=cY+Math.sin(a)*d,r=(Math.random()*.5+.5)*INITIAL_DUST_SIZE,p=new Particle(x,y,r,'white');const oV=Math.sqrt(G*star.mass/d);p.vx=-Math.sin(a)*oV*ORBITAL_VELOCITY_FACTOR;p.vy=Math.cos(a)*oV*ORBITAL_VELOCITY_FACTOR;particles.push(p);}
+            for(let i=0;i<NUM_COMETS;i++){const a=Math.random()*Math.PI*2,d=(Math.random()*.2+.8)*maxDist,x=cX+Math.cos(a)*d,y=cY+Math.sin(a)*d,r=(Math.random()*.5+1)*INITIAL_DUST_SIZE,p=new Particle(x,y,r,'#cceeff',!0);const oV=Math.sqrt(G*star.mass/d),cV=1.4;p.vx=-Math.sin(a)*oV*cV;p.vy=Math.cos(a)*oV*cV;particles.push(p);}
+            animate();
+        }
         function checkCollisions(){for(let i=0;i<particles.length;i++){if(particles[i].collided)continue;for(let j=i+1;j<particles.length;j++){if(particles[j].collided)continue;const dx=particles[j].x-particles[i].x,dy=particles[j].y-particles[i].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<particles[i].radius+particles[j].radius){const tM=particles[i].mass+particles[j].mass,nV_x=(particles[i].vx*particles[i].mass+particles[j].vx*particles[j].mass)/tM,nV_y=(particles[i].vy*particles[i].mass+particles[j].vy*particles[j].mass)/tM,nX=(particles[i].x*particles[i].mass+particles[j].x*particles[j].mass)/tM,nY=(particles[i].y*particles[i].mass+particles[j].y*particles[j].mass)/tM,nR=Math.sqrt(Math.pow(particles[i].radius,2)+Math.pow(particles[j].radius,2));particles[i].x=nX;particles[i].y=nY;particles[i].vx=nV_x;particles[i].vy=nV_y;particles[i].radius=nR;particles[i].mass=tM;particles[j].collided=!0;}}}particles=particles.filter(p=>!p.collided);}
-        function updateLabels(){const l=(e,t)=>{if(e.previousElementSibling)e.previousElementSibling.textContent=t};l(thetaSlider,`Sim Quality (Theta: ${THETA.toFixed(1)})`);l(starMassSlider,`Star Mass (${STAR_MASS.toFixed(1)})`);l(diskDensitySlider,`Disk Density (${NUM_PARTICLES})`);l(dustSizeSlider,`Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)})`);l(gravitySlider,`Gravitational Constant (${G})`);l(orbitalVelocitySlider,`Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR*100).toFixed(0)}%)`);l(cometCountSlider,`Number of Comets (${NUM_COMETS})`);l(gasDragSlider,`Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`);updateInfoPanel();}
+        function updateLabels(){const l=(e,t)=>{if(e.previousElementSibling)e.previousElementSibling.textContent=t};l(thetaSlider,`Sim Quality (Theta: ${THETA.toFixed(1)})`);l(starMassSlider,`Star Mass (${STAR_MASS.toFixed(1)})`);l(diskDensitySlider,`Disk Density (${NUM_PARTICLES})`);l(dustSizeSlider,`Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)})`);l(gravitySlider,`Gravitational Constant (${G.toFixed(1)})`);l(orbitalVelocitySlider,`Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR*100).toFixed(0)}%)`);l(cometCountSlider,`Number of Comets (${NUM_COMETS})`);l(gasDragSlider,`Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`);updateInfoPanel();}
         function updateInfoPanel(){let m=particles.reduce((m,p)=>p.mass>m?p.mass:m,0);timeElapsedEl.textContent=Math.floor(simulationTime).toLocaleString();largestBodyMassEl.textContent=m.toFixed(2);particleCountEl.textContent=particles.length.toLocaleString();}
-        function animate(){if(N_BODY_ENABLED){const b=new Boundary(-canvas.width,-canvas.height,canvas.width*3,canvas.height*3);qt=new QuadTree(b,4);particles.forEach(p=>{p.resetForce();qt.insert(p);});qt.updateMass();particles.forEach(p=>{p.applyStarGravity(star);qt.calculateForce(p,THETA);});}else{particles.forEach(p=>{p.resetForce();p.applyStarGravity(star);});}particles.forEach(p=>p.update());checkCollisions();simulationTime+=1;ctx.clearRect(0,0,canvas.width,canvas.height);star.draw();particles.forEach(p=>p.draw());updateInfoPanel();animationFrameId=requestAnimationFrame(animate);}
+        function animate(){if(N_BODY_ENABLED){const b=new Boundary(-canvas.width*2,-canvas.height*2,canvas.width*5,canvas.height*5);qt=new QuadTree(b,4);particles.forEach(p=>{p.resetForce();qt.insert(p);});qt.updateMass();particles.forEach(p=>{p.applyStarGravity(star);qt.calculateForce(p,THETA);});}else{particles.forEach(p=>{p.resetForce();p.applyStarGravity(star);});}particles.forEach(p=>p.update());checkCollisions();simulationTime+=1;ctx.clearRect(0,0,canvas.width,canvas.height);star.draw();particles.forEach(p=>p.draw());updateInfoPanel();animationFrameId=requestAnimationFrame(animate);}
         function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
         window.addEventListener('resize',init);resetButton.addEventListener('click',init);minimizeButton.addEventListener('click',()=>controlPanel.classList.toggle('minimized'));nBodyToggle.addEventListener('change',init);thetaSlider.addEventListener('input',e=>{THETA=parseFloat(e.target.value);updateLabels();});[starMassSlider,diskDensitySlider,dustSizeSlider,gravitySlider,orbitalVelocitySlider,cometCountSlider,gasDragSlider].forEach(s=>{s.addEventListener('change',init);});
         init();
