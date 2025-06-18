@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accretion Disk and Planetary Formation Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #111827; /* Tailwind gray-900 */
+        }
+        canvas {
+            display: block;
+            background-color: #000;
+        }
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(31, 41, 55, 0.8); /* Tailwind gray-800 with opacity */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            color: white;
+            max-width: 320px;
+            backdrop-filter: blur(10px);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #3B82F6; /* Tailwind blue-500 */
+            color: white;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2563EB; /* Tailwind blue-600 */
+        }
+        .info-box {
+            margin-top: 15px;
+            background-color: rgba(55, 65, 81, 0.5); /* Tailwind gray-700 with opacity */
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <canvas id="simulationCanvas"></canvas>
+
+    <div class="control-panel">
+        <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
+        
+        <div>
+            <label for="starMass">Star Mass (Solar Masses)</label>
+            <input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1">
+        </div>
+        
+        <div>
+            <label for="diskDensity">Disk Density (Particles)</label>
+            <input type="range" id="diskDensity" min="500" max="3000" value="1500" step="100">
+        </div>
+        
+        <div>
+            <label for="dustSize">Initial Dust Size (Radius)</label>
+            <input type="range" id="dustSize" min="0.5" max="3" value="1" step="0.1">
+        </div>
+         <div>
+            <label for="gravityConstant">Gravitational Constant</label>
+            <input type="range" id="gravityConstant" min="1" max="20" value="5" step="1">
+        </div>
+
+        <button id="resetButton">Reset Simulation</button>
+
+        <div class="info-box">
+            <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
+            <p><strong>Largest Body Mass:</strong> <span id="largestBodyMass">0</span> M⊕</p>
+            <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // --- DOM Elements ---
+        const starMassSlider = document.getElementById('starMass');
+        const diskDensitySlider = document.getElementById('diskDensity');
+        const dustSizeSlider = document.getElementById('dustSize');
+        const gravitySlider = document.getElementById('gravityConstant');
+        const resetButton = document.getElementById('resetButton');
+        const timeElapsedEl = document.getElementById('timeElapsed');
+        const largestBodyMassEl = document.getElementById('largestBodyMass');
+        const particleCountEl = document.getElementById('particleCount');
+
+        let particles = [];
+        let animationFrameId;
+        let simulationTime = 0;
+        
+        // --- Simulation Parameters ---
+        let STAR_MASS = parseFloat(starMassSlider.value);
+        let NUM_PARTICLES = parseInt(diskDensitySlider.value);
+        let INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
+        let G = parseFloat(gravitySlider.value); // Gravitational constant
+
+        const EARTH_MASS_EQUIVALENT = 5.972e24;
+        const PARTICLE_BASE_MASS = 1e20; // Base mass for a particle of size 1
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Star {
+            constructor(x, y, mass, radius) {
+                this.x = x;
+                this.y = y;
+                this.mass = mass * 1.989e30; // Convert solar mass to kg
+                this.radius = radius;
+            }
+
+            draw() {
+                ctx.beginPath();
+                const grad = ctx.createRadialGradient(this.x, this.y, this.radius * 0.2, this.x, this.y, this.radius);
+                grad.addColorStop(0, 'rgba(255, 255, 200, 1)');
+                grad.addColorStop(0.5, 'rgba(255, 204, 0, 1)');
+                grad.addColorStop(1, 'rgba(255, 153, 0, 0)');
+                ctx.fillStyle = grad;
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        class Particle {
+            constructor(x, y, radius, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = radius;
+                this.mass = PARTICLE_BASE_MASS * Math.pow(radius, 3);
+                this.color = color;
+                this.collided = false;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            update(star) {
+                // Gravity towards the central star
+                const dx = star.x - this.x;
+                const dy = star.y - this.y;
+                const distSq = dx * dx + dy * dy;
+                const dist = Math.sqrt(distSq);
+                
+                // Avoid singularity at the center
+                if (dist < star.radius) {
+                    this.collided = true;
+                    return;
+                }
+
+                const force = G * this.mass * star.mass / distSq;
+                const ax = force * dx / dist / this.mass;
+                const ay = force * dy / dist / this.mass;
+
+                this.vx += ax;
+                this.vy += ay;
+
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+        }
+
+        let star;
+
+        function init() {
+            // Stop any previous animation
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            resizeCanvas();
+            
+            STAR_MASS = parseFloat(starMassSlider.value);
+            NUM_PARTICLES = parseInt(diskDensitySlider.value);
+            INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
+            G = parseFloat(gravitySlider.value);
+            
+            simulationTime = 0;
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            star = new Star(centerX, centerY, STAR_MASS, 15 + (STAR_MASS - 1) * 5);
+            particles = [];
+
+            const maxDist = Math.min(centerX, centerY) * 0.8;
+            const minDist = star.radius * 3;
+
+            for (let i = 0; i < NUM_PARTICLES; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist;
+                const x = centerX + Math.cos(angle) * dist;
+                const y = centerY + Math.sin(angle) * dist;
+                
+                const radius = (Math.random() * 0.5 + 0.5) * INITIAL_DUST_SIZE;
+                const color = `hsl(${Math.random() * 60 + 200}, 80%, 70%)`;
+                
+                let p = new Particle(x, y, radius, color);
+
+                // Initial orbital velocity
+                const orbitalVelocity = Math.sqrt(G * star.mass / dist);
+                p.vx = -Math.sin(angle) * orbitalVelocity * 0.7; // 0.7 to make it slightly sub-Keplerian
+                p.vy = Math.cos(angle) * orbitalVelocity * 0.7;
+                
+                particles.push(p);
+            }
+            
+            animate();
+        }
+
+        function checkCollisions() {
+            for (let i = 0; i < particles.length; i++) {
+                if(particles[i].collided) continue;
+                for (let j = i + 1; j < particles.length; j++) {
+                    if(particles[j].collided) continue;
+
+                    const dx = particles[j].x - particles[i].x;
+                    const dy = particles[j].y - particles[i].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < particles[i].radius + particles[j].radius) {
+                        // Collision detected! Merge the particles.
+                        const totalMass = particles[i].mass + particles[j].mass;
+                        
+                        // Conserve momentum
+                        const newVx = (particles[i].vx * particles[i].mass + particles[j].vx * particles[j].mass) / totalMass;
+                        const newVy = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / totalMass;
+
+                        // New particle is positioned at the center of mass
+                        const newX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / totalMass;
+                        const newY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / totalMass;
+
+                        // New radius based on combined volume
+                        const newRadius = Math.cbrt(Math.pow(particles[i].radius, 3) + Math.pow(particles[j].radius, 3));
+                        
+                        particles[i].x = newX;
+                        particles[i].y = newY;
+                        particles[i].vx = newVx;
+                        particles[i].vy = newVy;
+                        particles[i].radius = newRadius;
+                        particles[i].mass = totalMass;
+
+                        // Mark the other particle for deletion
+                        particles[j].collided = true;
+                    }
+                }
+            }
+            // Remove collided particles
+            particles = particles.filter(p => !p.collided);
+        }
+
+        function updateInfoPanel() {
+            simulationTime += 1; // Each frame is one "year" for simplicity
+            let largestMass = 0;
+            if (particles.length > 0) {
+                 largestMass = particles.reduce((max, p) => p.mass > max ? p.mass : max, 0);
+            }
+            
+            const largestMassInEarths = (largestMass / EARTH_MASS_EQUIVALENT).toFixed(2);
+            
+            timeElapsedEl.textContent = simulationTime.toLocaleString();
+            largestBodyMassEl.textContent = largestMassInEarths;
+            particleCountEl.textContent = particles.length.toLocaleString();
+        }
+
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            star.draw();
+
+            particles.forEach(p => {
+                p.update(star);
+                p.draw();
+            });
+            
+            checkCollisions();
+            updateInfoPanel();
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('resize', () => {
+            // A debounce could be useful here for performance on rapid resizing
+            resizeCanvas();
+            init(); // Re-initialize on resize to adjust particle distribution
+        });
+        
+        resetButton.addEventListener('click', init);
+        
+        starMassSlider.addEventListener('input', () => {
+           document.querySelector('label[for="starMass"]').textContent = `Star Mass (${parseFloat(starMassSlider.value).toFixed(1)} Solar Masses)`;
+        });
+         diskDensitySlider.addEventListener('input', () => {
+           document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${diskDensitySlider.value} Particles)`;
+        });
+        dustSizeSlider.addEventListener('input', () => {
+           document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${parseFloat(dustSizeSlider.value).toFixed(1)} Radius)`;
+        });
+         gravitySlider.addEventListener('input', () => {
+            document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${gravitySlider.value})`;
+        });
+
+        // Initialize the simulation on load
+        init();
+    </script>
+</body>
+</html>
+
