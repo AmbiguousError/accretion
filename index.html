@@ -78,7 +78,8 @@
         
         <div>
             <label for="dustSize">Initial Dust Size (Radius)</label>
-            <input type="range" id="dustSize" min="0.5" max="3" value="1" step="0.1">
+            <!-- CHANGE: Increased default value for better visibility -->
+            <input type="range" id="dustSize" min="0.5" max="3" value="2" step="0.1">
         </div>
          <div>
             <label for="gravityConstant">Gravitational Constant</label>
@@ -141,14 +142,18 @@
             }
 
             draw() {
+                ctx.save();
                 ctx.beginPath();
                 const grad = ctx.createRadialGradient(this.x, this.y, this.radius * 0.2, this.x, this.y, this.radius);
                 grad.addColorStop(0, 'rgba(255, 255, 200, 1)');
                 grad.addColorStop(0.5, 'rgba(255, 204, 0, 1)');
                 grad.addColorStop(1, 'rgba(255, 153, 0, 0)');
                 ctx.fillStyle = grad;
+                ctx.shadowColor = 'rgba(255, 255, 0, 0.5)';
+                ctx.shadowBlur = 50;
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.restore();
             }
         }
 
@@ -165,10 +170,16 @@
             }
 
             draw() {
+                // --- CHANGE: Added glow effect for particles ---
+                ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = this.color;
+                // Add a shadow to create a glow. The blur radius is based on the particle's size.
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.7)';
+                ctx.shadowBlur = this.radius * 2 + 3;
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.restore();
             }
 
             update(star) {
@@ -209,6 +220,14 @@
             G = parseFloat(gravitySlider.value);
             
             simulationTime = 0;
+            // Update labels on init to match default slider values
+            document.querySelector('label[for="starMass"]').textContent = `Star Mass (${parseFloat(starMassSlider.value).toFixed(1)} Solar Masses)`;
+            document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${diskDensitySlider.value} Particles)`;
+            document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${parseFloat(dustSizeSlider.value).toFixed(1)} Radius)`;
+            document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${gravitySlider.value})`;
+            document.querySelector('label[for="simSpeed"]').textContent = `Simulation Speed (${simSpeedSlider.value} Years/Frame)`;
+
+
             updateInfoPanel(); // Reset info panel text on init
 
             const centerX = canvas.width / 2;
@@ -227,7 +246,6 @@
                 const y = centerY + Math.sin(angle) * dist;
                 
                 const radius = (Math.random() * 0.5 + 0.5) * INITIAL_DUST_SIZE;
-                // --- Set particle color to white ---
                 const color = 'white'; 
                 
                 let p = new Particle(x, y, radius, color);
@@ -243,8 +261,6 @@
         }
 
         function checkCollisions() {
-            // Using a grid-based approach for optimization might be better for many particles,
-            // but for a few thousands, brute force is acceptable for this simulation.
             for (let i = 0; i < particles.length; i++) {
                 if(particles[i].collided) continue;
                 for (let j = i + 1; j < particles.length; j++) {
@@ -255,18 +271,11 @@
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < particles[i].radius + particles[j].radius) {
-                        // Collision detected! Merge the particles.
                         const totalMass = particles[i].mass + particles[j].mass;
-                        
-                        // Conserve momentum
                         const newVx = (particles[i].vx * particles[i].mass + particles[j].vx * particles[j].mass) / totalMass;
                         const newVy = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / totalMass;
-
-                        // New particle is positioned at the center of mass
                         const newX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / totalMass;
                         const newY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / totalMass;
-
-                        // New radius based on combined volume
                         const newRadius = Math.cbrt(Math.pow(particles[i].radius, 3) + Math.pow(particles[j].radius, 3));
                         
                         particles[i].x = newX;
@@ -275,13 +284,10 @@
                         particles[i].vy = newVy;
                         particles[i].radius = newRadius;
                         particles[i].mass = totalMass;
-
-                        // Mark the other particle for deletion
                         particles[j].collided = true;
                     }
                 }
             }
-            // Remove collided particles
             particles = particles.filter(p => !p.collided);
         }
 
@@ -300,17 +306,14 @@
 
 
         function animate() {
-            // Read the latest simulation speed value
             SIMULATION_SPEED = parseInt(simSpeedSlider.value);
             
-            // Run the physics simulation multiple times per frame
             for (let i = 0; i < SIMULATION_SPEED; i++) {
                 particles.forEach(p => p.update(star));
                 checkCollisions();
-                simulationTime += 1; // Increment time for each simulation step
+                simulationTime += 1;
             }
 
-            // --- Drawing (only once per frame for performance) ---
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             star.draw();
             particles.forEach(p => p.draw());
@@ -322,14 +325,12 @@
 
         // --- Event Listeners ---
         window.addEventListener('resize', () => {
-            // A debounce could be useful here for performance on rapid resizing
             resizeCanvas();
-            init(); // Re-initialize on resize to adjust particle distribution
+            init();
         });
         
         resetButton.addEventListener('click', init);
         
-        // Add listeners to update labels dynamically
         starMassSlider.addEventListener('input', (e) => {
            e.target.previousElementSibling.textContent = `Star Mass (${parseFloat(e.target.value).toFixed(1)} Solar Masses)`;
         });
@@ -348,6 +349,7 @@
 
         // Initialize the simulation on load
         init();
-    </script></body>
+    </script>
+</body>
 </html>
 
