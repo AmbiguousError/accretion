@@ -76,7 +76,7 @@
         <div class="panel-content">
             <h1 class="h4 mb-4">Simulation Controls</h1>
             
-            <div class="mb-3"><label for="simSpeed" class="form-label">Simulation Speed</label><input type="range" class="form-range" id="simSpeed" min="0.1" max="10" value="0.3" step="0.1"></div>
+            <div class="mb-3"><label for="simSpeed" class="form-label">Simulation Speed</label><input type="range" class="form-range" id="simSpeed" min="0.05" max="5" value="0.3" step="0.05"></div>
             <div class="form-check mb-3"><input type="checkbox" class="form-check-input" id="nBodyToggle" checked><label for="nBodyToggle" class="form-check-label">Enable N-Body Physics</label></div>
             <div class="mb-3"><label for="theta" class="form-label">Sim Quality (Theta)</label><input type="range" class="form-range" id="theta" min="0" max="2" value="1.0" step="0.1"></div>
             
@@ -104,7 +104,7 @@
 
             <hr class="my-4"/>
             <h2 class="h5">Protoplanetary Disk</h2>
-            <div class="mb-3"><label for="diskDensity" class="form-label">Disk Density</label><input type="range" class="form-range" id="diskDensity" min="100" max="1500" value="1500" step="50"></div>
+            <div class="mb-3"><label for="diskDensity" class="form-label">Disk Density</label><input type="range" class="form-range" id="diskDensity" min="100" max="2500" value="1500" step="50"></div>
             <div class="mb-3"><label for="dustSize" class="form-label">Initial Dust Size</label><input type="range" class="form-range" id="dustSize" min="0.5" max="3" value="0.5" step="0.1"></div>
             <div class="mb-3"><label for="gravityConstant" class="form-label">Gravitational Constant</label><input type="range" class="form-range" id="gravityConstant" min="0.1" max="10" value="1.0" step="0.1"></div>
             <div class="mb-3"><label for="orbitalVelocity" class="form-label">Orbital Velocity %</label><input type="range" class="form-range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01"></div>
@@ -184,82 +184,10 @@
 
         Write a captivating summary.`; try { let chatHistory = [{ role: "user", parts: [{ text: prompt }] }]; const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); } const result = await response.json(); if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts[0]) { const text = result.candidates[0].content.parts[0].text; reportContent.innerHTML = text.replace(/\n/g, '<br>'); } else { throw new Error("Invalid response structure from API."); } } catch (error) { console.error("Gemini API Error:", error); reportContent.innerHTML = `<p class="text-danger">Error generating report. Could not connect to the observatory's deep space network. Please check the console for details.</p>`; } }
         function loadSolSystem() { if (animationFrameId) cancelAnimationFrame(animationFrameId); resizeCanvas(); elements.binaryToggle.checked = !1; elements.trinaryToggle.checked = !1; elements.nBodyToggle.checked = !1; elements.starMassSlider.value = 1; elements.gravitySlider.value = 2; elements.simSpeedSlider.value = 1; readAndSetParams(); const cX = elements.canvas.width / 2, cY = elements.canvas.height / 2; const primaryStar = new Star(cX, cY, STAR_MASS * 1e4, 15); stars = [primaryStar]; particles = []; const maxScreenDist = Math.min(cX, cY) * .9, neptuneAU = 30.05; solarSystemData.forEach(p => { const a = Math.random() * Math.PI * 2, dist = maxScreenDist * Math.pow(p.au / neptuneAU, .65), x = cX + Math.cos(a) * dist, y = cY + Math.sin(a) * dist, planet = new Particle(x, y, p.radius, p.color), oV = Math.sqrt(G * primaryStar.mass / dist); planet.vx = -Math.sin(a) * oV; planet.vy = Math.cos(a) * oV; particles.push(planet); }); animate(); }
-        function init() {
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            resizeCanvas();
-            readAndSetParams();
-            const cX = elements.canvas.width / 2, cY = elements.canvas.height / 2;
-            
-            // Create Stars
-            const primaryStar = new Star(0, 0, STAR_MASS * 1e4, 15 + (STAR_MASS - 1) * 5);
-            stars = [primaryStar];
-            if (BINARY_ENABLED) {
-                const star2 = new Star(0, 0, STAR2_MASS * 1e4, 10 + (STAR2_MASS - 1) * 4, '#aaccff');
-                const m1 = primaryStar.mass, m2 = star2.mass;
-                const dist = STAR2_DIST;
-                const speed = Math.sqrt(G * (m1 + m2) / dist) * STAR2_SPEED;
-                star2.x = dist * (m1 / (m1 + m2));
-                primaryStar.x = -dist * (m2 / (m1 + m2));
-                star2.vy = -speed * (m1 / (m1 + m2));
-                primaryStar.vy = speed * (m2 / (m1 + m2));
-                stars.push(star2);
-            }
-            if (TRINARY_ENABLED && BINARY_ENABLED) {
-                const star3 = new Star(0, 0, STAR3_MASS * 1e4, 8 + (STAR3_MASS - 1) * 4, '#ffaaaa');
-                const m12 = stars[0].mass + stars[1].mass;
-                const m3 = star3.mass;
-                const com12_x = (stars[0].x * stars[0].mass + stars[1].x * stars[1].mass) / m12;
-                const com12_y = (stars[0].y * stars[0].mass + stars[1].y * stars[1].mass) / m12;
-                const com12_vy = (stars[0].vy * stars[0].mass + stars[1].vy * stars[1].mass) / m12;
-                const dist = STAR3_DIST;
-                const speed = Math.sqrt(G * (m12 + m3) / dist) * STAR3_SPEED;
-                
-                star3.x = com12_x + dist * (m12 / (m12 + m3));
-                stars[0].x -= dist * (m3 / (m12 + m3));
-                stars[1].x -= dist * (m3 / (m12 + m3));
-
-                star3.vy = com12_vy - speed * (m12 / (m12 + m3));
-                stars[0].vy += speed * (m3 / (m12 + m3));
-                stars[1].vy += speed * (m3 / (m12 + m3));
-                stars.push(star3);
-            }
-
-            // Center the system and nullify momentum
-            const totalMass = stars.reduce((sum, s) => sum + s.mass, 0);
-            const com_x = stars.reduce((sum, s) => sum + s.x * s.mass, 0) / totalMass;
-            const com_y = stars.reduce((sum, s) => sum + s.y * s.mass, 0) / totalMass;
-            const com_vx = stars.reduce((sum, s) => sum + s.vx * s.mass, 0) / totalMass;
-            const com_vy = stars.reduce((sum, s) => sum + s.vy * s.mass, 0) / totalMass;
-            
-            stars.forEach(s => {
-                s.x += (cX - com_x);
-                s.y += (cY - com_y);
-                s.vx -= com_vx;
-                s.vy -= com_vy;
-            });
-            
-            // Create Particles
-            particles = [];
-            const maxDist = Math.min(cX, cY) * .9, minDist = stars.reduce((m, s) => Math.max(m, s.radius), 0) * 5;
-            for (let i = 0; i < NUM_PARTICLES; i++) {
-                const a = Math.random() * Math.PI * 2;
-                const d = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist;
-                const x = cX + Math.cos(a) * d;
-                const y = cY + Math.sin(a) * d;
-                const r = (Math.random() * .5 + .5) * INITIAL_DUST_SIZE;
-                const p = new Particle(x, y, r, 'white');
-                const oV = Math.sqrt(G * totalMass / d);
-                p.vx = -Math.sin(a) * oV * ORBITAL_VELOCITY_FACTOR - com_vx;
-                p.vy = Math.cos(a) * oV * ORBITAL_VELOCITY_FACTOR - com_vy;
-                particles.push(p);
-            }
-             for (let i = 0; i < NUM_COMETS; i++) { const a = Math.random() * Math.PI * 2, d = (Math.random() * .2 + .8) * maxDist, x = cX + Math.cos(a) * d, y = cY + Math.sin(a) * d, r = (Math.random() * .5 + 1) * INITIAL_DUST_SIZE, p = new Particle(x, y, r, '#cceeff', !0); const oV = Math.sqrt(G * totalMass / d), cV = 1.4; p.vx = -Math.sin(a) * oV * cV - com_vx; p.vy = Math.cos(a) * oV * cV - com_vy; particles.push(p); }
-            
-            animate();
-        }
+        function init() { if (animationFrameId) cancelAnimationFrame(animationFrameId); resizeCanvas(); readAndSetParams(); const cX = elements.canvas.width / 2, cY = elements.canvas.height / 2; const primaryStar = new Star(0, 0, STAR_MASS * 1e4, 15 + (STAR_MASS - 1) * 5); stars = [primaryStar]; if (BINARY_ENABLED) { const star2 = new Star(0, 0, STAR2_MASS * 1e4, 10 + (STAR2_MASS - 1) * 4, '#aaccff'); const m1 = primaryStar.mass, m2 = star2.mass; const dist = STAR2_DIST; const speed = Math.sqrt(G * (m1 + m2) / dist) * STAR2_SPEED; star2.x = dist * (m1 / (m1 + m2)); primaryStar.x = -dist * (m2 / (m1 + m2)); star2.vy = -speed * (m1 / (m1 + m2)); primaryStar.vy = speed * (m2 / (m1 + m2)); stars.push(star2); } if (TRINARY_ENABLED && BINARY_ENABLED) { const star3 = new Star(0, 0, STAR3_MASS * 1e4, 8 + (STAR3_MASS - 1) * 4, '#ffaaaa'); const m12 = stars[0].mass + stars[1].mass; const m3 = star3.mass; const com12_x = (stars[0].x * stars[0].mass + stars[1].x * stars[1].mass) / m12; const com12_y = (stars[0].y * stars[0].mass + stars[1].y * stars[1].mass) / m12; const com12_vy = (stars[0].vy * stars[0].mass + stars[1].vy * stars[1].mass) / m12; const dist = STAR3_DIST; const speed = Math.sqrt(G * (m12 + m3) / dist) * STAR3_SPEED; star3.x = com12_x + dist * (m12 / (m12 + m3)); stars[0].x -= dist * (m3 / (m12 + m3)); stars[1].x -= dist * (m3 / (m12 + m3)); star3.vy = com12_vy - speed * (m12 / (m12 + m3)); stars[0].vy += speed * (m3 / (m12 + m3)); stars[1].vy += speed * (m3 / (m12 + m3)); stars.push(star3); } const totalMass = stars.reduce((sum, s) => sum + s.mass, 0); const com_x = stars.reduce((sum, s) => sum + s.x * s.mass, 0) / totalMass; const com_y = stars.reduce((sum, s) => sum + s.y * s.mass, 0) / totalMass; const com_vx = stars.reduce((sum, s) => sum + s.vx * s.mass, 0) / totalMass; const com_vy = stars.reduce((sum, s) => sum + s.vy * s.mass, 0) / totalMass; stars.forEach(s => { s.x += (cX - com_x); s.y += (cY - com_y); s.vx -= com_vx; s.vy -= com_vy; }); particles = []; const maxDist = Math.min(cX, cY) * .9, minDist = stars.reduce((m, s) => Math.max(m, s.radius), 0) * 5; for (let i = 0; i < NUM_PARTICLES; i++) { const a = Math.random() * Math.PI * 2, d = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist, x = cX + Math.cos(a) * d, y = cY + Math.sin(a) * d, r = (Math.random() * .5 + .5) * INITIAL_DUST_SIZE, p = new Particle(x, y, r, 'white'); const oV = Math.sqrt(G * totalMass / d); p.vx = -Math.sin(a) * oV * ORBITAL_VELOCITY_FACTOR - com_vx; p.vy = Math.cos(a) * oV * ORBITAL_VELOCITY_FACTOR - com_vy; particles.push(p); } for (let i = 0; i < NUM_COMETS; i++) { const a = Math.random() * Math.PI * 2, d = (Math.random() * .2 + .8) * maxDist, x = cX + Math.cos(a) * d, y = cY + Math.sin(a) * d, r = (Math.random() * .5 + 1) * INITIAL_DUST_SIZE, p = new Particle(x, y, r, '#cceeff', !0); const oV = Math.sqrt(G * totalMass / d), cV = 1.4; p.vx = -Math.sin(a) * oV * cV - com_vx; p.vy = Math.cos(a) * oV * cV - com_vy; particles.push(p); } animate(); }
         function readAndSetParams() { SIMULATION_SPEED = parseFloat(elements.simSpeedSlider.value); N_BODY_ENABLED = elements.nBodyToggle.checked; THETA = parseFloat(elements.thetaSlider.value); STAR_MASS = parseFloat(elements.starMassSlider.value); NUM_PARTICLES = parseInt(elements.diskDensitySlider.value); INITIAL_DUST_SIZE = parseFloat(elements.dustSizeSlider.value); G = parseFloat(elements.gravitySlider.value); N_BODY_G = G * .05; ORBITAL_VELOCITY_FACTOR = parseFloat(elements.orbitalVelocitySlider.value); NUM_COMETS = parseInt(elements.cometCountSlider.value); GAS_DRAG_FACTOR = parseFloat(elements.gasDragSlider.value); BINARY_ENABLED = elements.binaryToggle.checked; elements.binaryControls.classList.toggle('d-none', !BINARY_ENABLED); STAR2_MASS = parseFloat(elements.star2MassSlider.value); STAR2_DIST = parseFloat(elements.star2DistSlider.value); STAR2_SPEED = parseFloat(elements.star2SpeedSlider.value); TRINARY_ENABLED = elements.trinaryToggle.checked; elements.trinaryControls.classList.toggle('d-none', !TRINARY_ENABLED || !BINARY_ENABLED); STAR3_MASS = parseFloat(elements.star3MassSlider.value); STAR3_DIST = parseFloat(elements.star3DistSlider.value); STAR3_SPEED = parseFloat(elements.star3SpeedSlider.value); timeAccumulator = 0; simulationTime = 0; updateLabels(); }
         function checkCollisions() { for (let i = 0; i < particles.length; i++) { if (particles[i].collided) continue; for (let j = i + 1; j < particles.length; j++) { if (particles[j].collided) continue; const dx = particles[j].x - particles[i].x, dy = particles[j].y - particles[i].y, dist = Math.sqrt(dx * dx + dy * dy); if (dist < particles[i].radius + particles[j].radius) { const tM = particles[i].mass + particles[j].mass, nV_x = (particles[i].vx * particles[i].mass + particles[j].vx * particles[j].mass) / tM, nV_y = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / tM, nX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / tM, nY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / tM, nR = Math.sqrt(Math.pow(particles[i].radius, 2) + Math.pow(particles[j].radius, 2)); particles[i].x = nX; particles[i].y = nY; particles[i].vx = nV_x; particles[i].vy = nV_y; particles[i].radius = nR; particles[i].mass = tM; particles[j].collided = !0; } } } particles = particles.filter(p => !p.collided); }
-        function updateLabels() { const l = (e, t) => { const target = e.nextElementSibling || e.parentElement.querySelector('.form-check-label'); if (target) target.textContent = t; else e.parentElement.querySelector('label').textContent = t }; l(elements.simSpeedSlider, `Simulation Speed (${SIMULATION_SPEED.toFixed(1)}x)`); l(elements.thetaSlider, `Sim Quality (Theta: ${THETA.toFixed(1)})`); l(elements.starMassSlider, `Star Mass (${STAR_MASS.toFixed(1)})`); l(elements.diskDensitySlider, `Disk Density (${NUM_PARTICLES})`); l(elements.dustSizeSlider, `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)})`); l(elements.gravitySlider, `Gravitational Constant (${G.toFixed(1)})`); l(elements.orbitalVelocitySlider, `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR * 100).toFixed(0)}%)`); l(elements.cometCountSlider, `Number of Comets (${NUM_COMETS})`); l(elements.gasDragSlider, `Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`); l(elements.star2MassSlider, `Companion Mass (${STAR2_MASS.toFixed(1)})`); l(elements.star2DistSlider, `Companion Distance (${STAR2_DIST})`); l(elements.star2SpeedSlider, `Companion Speed % (${(STAR2_SPEED * 100).toFixed(0)}%)`); l(elements.star3MassSlider, `Companion Mass (${STAR3_MASS.toFixed(1)})`); l(elements.star3DistSlider, `Companion Distance (${STAR3_DIST})`); l(elements.star3SpeedSlider, `Companion Speed % (${(STAR3_SPEED*100).toFixed(0)}%)`); updateInfoPanel(); }
+        function updateLabels() { const l = (e, t) => { const target = e.nextElementSibling || e.parentElement.querySelector('.form-check-label'); if (target) target.textContent = t; else e.parentElement.querySelector('label').textContent = t }; l(elements.simSpeedSlider, `Simulation Speed (${SIMULATION_SPEED.toFixed(2)}x)`); l(elements.thetaSlider, `Sim Quality (Theta: ${THETA.toFixed(1)})`); l(elements.starMassSlider, `Star Mass (${STAR_MASS.toFixed(1)})`); l(elements.diskDensitySlider, `Disk Density (${NUM_PARTICLES})`); l(elements.dustSizeSlider, `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)})`); l(elements.gravitySlider, `Gravitational Constant (${G.toFixed(1)})`); l(elements.orbitalVelocitySlider, `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR * 100).toFixed(0)}%)`); l(elements.cometCountSlider, `Number of Comets (${NUM_COMETS})`); l(elements.gasDragSlider, `Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`); l(elements.star2MassSlider, `Companion Mass (${STAR2_MASS.toFixed(1)})`); l(elements.star2DistSlider, `Companion Distance (${STAR2_DIST})`); l(elements.star2SpeedSlider, `Companion Speed % (${(STAR2_SPEED * 100).toFixed(0)}%)`); l(elements.star3MassSlider, `Companion Mass (${STAR3_MASS.toFixed(1)})`); l(elements.star3DistSlider, `Companion Distance (${STAR3_DIST})`); l(elements.star3SpeedSlider, `Companion Speed % (${(STAR3_SPEED*100).toFixed(0)}%)`); updateInfoPanel(); }
         function updateInfoPanel() { let m = particles.reduce((m, p) => p.mass > m ? p.mass : m, 0); elements.timeElapsedEl.textContent = Math.floor(simulationTime).toLocaleString(); elements.largestBodyMassEl.textContent = m.toFixed(2); elements.particleCountEl.textContent = particles.length.toLocaleString(); }
         function animate() { timeAccumulator += SIMULATION_SPEED; while (timeAccumulator >= 1) { stars.forEach(s => s.resetForce()); particles.forEach(p => p.resetForce()); if (stars.length > 1) { for (let i = 0; i < stars.length; i++) { for (let j = i + 1; j < stars.length; j++) { const s1 = stars[i], s2 = stars[j]; const dx = s2.x - s1.x, dy = s2.y - s1.y, distSq = dx * dx + dy * dy; if (distSq > 0) { const dist = Math.sqrt(distSq); const force = G * s1.mass * s2.mass / distSq; s1.ax += force * dx / dist / s1.mass; s1.ay += force * dy / dist / s1.mass; s2.ax -= force * dx / dist / s2.mass; s2.ay -= force * dy / dist / s2.mass; } } } } if (N_BODY_ENABLED) { const b = new Boundary(-elements.canvas.width * 2, -elements.canvas.height * 2, elements.canvas.width * 5, elements.canvas.height * 5); qt = new QuadTree(b, 4); particles.forEach(p => { qt.insert(p); }); qt.updateMass(); particles.forEach(p => { stars.forEach(s => p.applyGravityFrom(s)); qt.calculateForce(p, THETA); }); } else { particles.forEach(p => { stars.forEach(s => p.applyGravityFrom(s)); }); } particles.forEach(p => p.update()); stars.forEach(s => s.update()); checkCollisions(); simulationTime += 1; timeAccumulator -= 1; } elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height); stars.forEach(s => s.draw()); particles.forEach(p => p.draw()); updateInfoPanel(); animationFrameId = requestAnimationFrame(animate); }
         function resizeCanvas() { elements.canvas.width = window.innerWidth; elements.canvas.height = window.innerHeight; }
