@@ -28,11 +28,9 @@
             width: 320px;
             max-width: 90vw;
             backdrop-filter: blur(10px);
-            /* --- CHANGE: Added transition for smooth minimizing --- */
             transition: transform 0.4s ease-in-out;
             z-index: 10;
         }
-        /* --- NEW: Style for the minimized state --- */
         .control-panel.minimized {
             transform: translateX(calc(-100% + 50px));
         }
@@ -101,13 +99,11 @@
     <canvas id="simulationCanvas"></canvas>
 
     <div id="controlPanel" class="control-panel">
-        <!-- --- NEW: Minimize Button --- -->
         <button id="minimizeButton" title="Toggle Sidebar">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
         </button>
-        <!-- --- NEW: Wrapper for panel content --- -->
         <div class="panel-content">
             <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
             
@@ -137,9 +133,10 @@
                 <label for="cometCount">Number of Comets</label>
                 <input type="range" id="cometCount" min="0" max="50" value="5" step="1">
             </div>
+            <!-- NEW: Gas Drag Slider -->
             <div>
-                <label for="simSpeed">Simulation Speed (Years/Frame)</label>
-                <input type="range" id="simSpeed" min="1" max="50" value="20" step="1">
+                <label for="gasDrag">Gas Drag</label>
+                <input type="range" id="gasDrag" min="0" max="0.001" value="0" step="0.00005">
             </div>
 
             <button id="resetButton">Reset Simulation</button>
@@ -165,7 +162,7 @@
         const gravitySlider = document.getElementById('gravityConstant');
         const orbitalVelocitySlider = document.getElementById('orbitalVelocity');
         const cometCountSlider = document.getElementById('cometCount');
-        const simSpeedSlider = document.getElementById('simSpeed');
+        const gasDragSlider = document.getElementById('gasDrag'); // New slider
         const resetButton = document.getElementById('resetButton');
         const timeElapsedEl = document.getElementById('timeElapsed');
         const largestBodyMassEl = document.getElementById('largestBodyMass');
@@ -175,7 +172,7 @@
         let animationFrameId;
         let simulationTime = 0;
         
-        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, SIMULATION_SPEED;
+        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, GAS_DRAG_FACTOR;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -241,12 +238,18 @@
                     return;
                 }
 
+                // Gravitational acceleration
                 const acceleration = (G * star.mass) / distSq;
                 const ax = acceleration * (dx / dist);
                 const ay = acceleration * (dy / dist);
 
                 this.vx += ax;
                 this.vy += ay;
+
+                // --- NEW: Apply Gas Drag ---
+                // This slows the particle down slightly each frame, opposing its current velocity.
+                this.vx *= (1 - GAS_DRAG_FACTOR);
+                this.vy *= (1 - GAS_DRAG_FACTOR);
 
                 this.x += this.vx;
                 this.y += this.vy;
@@ -268,6 +271,7 @@
             G = parseFloat(gravitySlider.value);
             ORBITAL_VELOCITY_FACTOR = parseFloat(orbitalVelocitySlider.value);
             NUM_COMETS = parseInt(cometCountSlider.value);
+            GAS_DRAG_FACTOR = parseFloat(gasDragSlider.value);
 
             simulationTime = 0;
             
@@ -277,7 +281,7 @@
             document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${G})`;
             document.querySelector('label[for="orbitalVelocity"]').textContent = `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR * 100).toFixed(0)}%)`;
             document.querySelector('label[for="cometCount"]').textContent = `Number of Comets (${NUM_COMETS})`;
-            document.querySelector('label[for="simSpeed"]').textContent = `Simulation Speed (${simSpeedSlider.value} Years/Frame)`;
+            document.querySelector('label[for="gasDrag"]').textContent = `Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`;
 
             updateInfoPanel();
 
@@ -363,13 +367,9 @@
         }
 
         function animate() {
-            SIMULATION_SPEED = parseInt(simSpeedSlider.value);
-            
-            for (let i = 0; i < SIMULATION_SPEED; i++) {
-                particles.forEach(p => p.update(star));
-                checkCollisions();
-                simulationTime += 1;
-            }
+            particles.forEach(p => p.update(star));
+            checkCollisions();
+            simulationTime += 1;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             star.draw();
@@ -384,7 +384,6 @@
         window.addEventListener('resize', init);
         resetButton.addEventListener('click', init);
         
-        // --- NEW: Event listener for the minimize button ---
         minimizeButton.addEventListener('click', () => {
             controlPanel.classList.toggle('minimized');
         });
@@ -395,7 +394,7 @@
         gravitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gravitational Constant (${e.target.value})`; });
         orbitalVelocitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Orbital Velocity % (${(parseFloat(e.target.value) * 100).toFixed(0)}%)`; });
         cometCountSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Number of Comets (${e.target.value})`; });
-        simSpeedSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Simulation Speed (${e.target.value} Years/Frame)`; });
+        gasDragSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gas Drag (${parseFloat(e.target.value).toFixed(5)})`; });
 
         init();
     </script>
