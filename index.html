@@ -43,10 +43,16 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
             pointer-events: none;
+            /* Added for mobile scrolling */
+            overflow-y: auto;
         }
         #landing-overlay.visible {
             opacity: 1;
             pointer-events: all;
+        }
+        #landing-overlay .container-fluid {
+            max-height: 100vh;
+            overflow-y: auto;
         }
 
         #settings-button {
@@ -107,7 +113,7 @@
             <h2 class="h5">Binary Companion</h2>
              <div class="form-check mb-3"><input type="checkbox" class="form-check-input" id="binaryToggle"><label for="binaryToggle" class="form-check-label">Enable Binary Star</label></div>
              <div id="binary-controls" class="d-none">
-                <div class="mb-3"><label for="star2Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star2Mass" min="0.2" max="5" value="0.5" step="0.1"></div>
+                <div class="mb-3"><label for="star2Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star2Mass" min="0.2" max="5" value="0.3" step="0.1"></div>
                 <div class="mb-3"><label for="star2Dist" class="form-label">Companion Distance</label><input type="range" class="form-range" id="star2Dist" min="150" max="400" value="250" step="10"></div>
                 <div class="mb-3"><label for="star2Speed" class="form-label">Companion Speed %</label><input type="range" class="form-range" id="star2Speed" min="0.5" max="1.5" value="1.0" step="0.05"></div>
              </div>
@@ -259,12 +265,19 @@ Write a captivating summary.`; try { let chatHistory = [{ role: "user", parts: [
             window.addEventListener('resize', init); 
             elements.resetButton.addEventListener('click', init); 
             elements.solSystemButton.addEventListener('click', loadSolSystem); 
-            elements.minimizeButton.addEventListener('click', () => elements.controlPanel.classList.toggle('minimized'));
+            
             elements.binaryToggle.addEventListener('change', init);
             elements.trinaryToggle.addEventListener('change', init);
             elements.geminiButton.addEventListener('click', generateReport);
             elements.nBodyToggle.addEventListener('change', init);
-            [elements.simSpeedSlider, elements.thetaSlider, elements.starMassSlider, elements.diskDensitySlider, elements.dustSizeSlider, elements.gravitySlider, elements.orbitalVelocitySlider, elements.cometCountSlider, elements.gasDragSlider, elements.star2MassSlider, elements.star2DistSlider, elements.star2SpeedSlider, elements.star3MassSlider, elements.star3DistSlider, elements.star3SpeedSlider].forEach(s => { s.addEventListener('input', () => { readAndSetParams(); if (s.id !== 'simSpeed' && s.id !== 'theta') init(); }); });
+            [elements.simSpeedSlider, elements.thetaSlider, elements.starMassSlider, elements.diskDensitySlider, elements.dustSizeSlider, elements.gravitySlider, elements.orbitalVelocitySlider, elements.cometCountSlider, elements.gasDragSlider, elements.star2MassSlider, elements.star2DistSlider, elements.star2SpeedSlider, elements.star3MassSlider, elements.star3DistSlider, elements.star3SpeedSlider].forEach(s => { 
+                if (s) { // Guard clause to prevent error if element is not found
+                    s.addEventListener('input', () => { 
+                        readAndSetParams(); 
+                        if (s.id !== 'simSpeed' && s.id !== 'theta') init(); 
+                    });
+                }
+            });
         });
     </script>
 </body>
