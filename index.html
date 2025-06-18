@@ -25,9 +25,46 @@
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             color: white;
-            max-width: 320px;
+            width: 320px;
+            max-width: 90vw;
             backdrop-filter: blur(10px);
+            /* --- CHANGE: Added transition for smooth minimizing --- */
+            transition: transform 0.4s ease-in-out;
+            z-index: 10;
         }
+        /* --- NEW: Style for the minimized state --- */
+        .control-panel.minimized {
+            transform: translateX(calc(-100% + 50px));
+        }
+        .control-panel .panel-content {
+            transition: opacity 0.2s ease-in-out;
+        }
+        .control-panel.minimized .panel-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #minimizeButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px;
+            border-radius: 9999px;
+            background-color: rgba(75, 85, 99, 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #minimizeButton:hover {
+            background-color: rgba(107, 114, 128, 0.5);
+        }
+        #minimizeButton svg {
+            transition: transform 0.4s ease-in-out;
+            color: #d1d5db; /* gray-300 */
+        }
+        .control-panel.minimized #minimizeButton svg {
+            transform: rotate(180deg);
+        }
+
         label {
             display: block;
             margin-bottom: 5px;
@@ -37,7 +74,7 @@
             width: 100%;
             margin-bottom: 15px;
         }
-        button {
+        button#resetButton {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -48,7 +85,7 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        button:hover {
+        button#resetButton:hover {
             background-color: #2563EB; /* Tailwind blue-600 */
         }
         .info-box {
@@ -63,48 +100,55 @@
 
     <canvas id="simulationCanvas"></canvas>
 
-    <div class="control-panel">
-        <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
-        
-        <div>
-            <label for="starMass">Star Mass</label>
-            <input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1">
-        </div>
-        
-        <div>
-            <label for="diskDensity">Disk Density (Particles)</label>
-            <input type="range" id="diskDensity" min="500" max="3000" value="1500" step="100">
-        </div>
-        
-        <div>
-            <label for="dustSize">Initial Dust Size (Radius)</label>
-            <input type="range" id="dustSize" min="0.5" max="3" value="2" step="0.1">
-        </div>
-         <div>
-            <label for="gravityConstant">Gravitational Constant</label>
-            <input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10">
-        </div>
-        <!-- NEW: Orbital Velocity Slider -->
-        <div>
-            <label for="orbitalVelocity">Orbital Velocity %</label>
-            <input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01">
-        </div>
-        <!-- NEW: Comets Slider -->
-        <div>
-            <label for="cometCount">Number of Comets</label>
-            <input type="range" id="cometCount" min="0" max="50" value="5" step="1">
-        </div>
-        <div>
-            <label for="simSpeed">Simulation Speed (Years/Frame)</label>
-            <input type="range" id="simSpeed" min="1" max="50" value="20" step="1">
-        </div>
+    <div id="controlPanel" class="control-panel">
+        <!-- --- NEW: Minimize Button --- -->
+        <button id="minimizeButton" title="Toggle Sidebar">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        <!-- --- NEW: Wrapper for panel content --- -->
+        <div class="panel-content">
+            <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
+            
+            <div>
+                <label for="starMass">Star Mass</label>
+                <input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1">
+            </div>
+            
+            <div>
+                <label for="diskDensity">Disk Density (Particles)</label>
+                <input type="range" id="diskDensity" min="500" max="3000" value="1500" step="100">
+            </div>
+            
+            <div>
+                <label for="dustSize">Initial Dust Size (Radius)</label>
+                <input type="range" id="dustSize" min="0.5" max="3" value="2" step="0.1">
+            </div>
+             <div>
+                <label for="gravityConstant">Gravitational Constant</label>
+                <input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10">
+            </div>
+            <div>
+                <label for="orbitalVelocity">Orbital Velocity %</label>
+                <input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01">
+            </div>
+            <div>
+                <label for="cometCount">Number of Comets</label>
+                <input type="range" id="cometCount" min="0" max="50" value="5" step="1">
+            </div>
+            <div>
+                <label for="simSpeed">Simulation Speed (Years/Frame)</label>
+                <input type="range" id="simSpeed" min="1" max="50" value="20" step="1">
+            </div>
 
-        <button id="resetButton">Reset Simulation</button>
+            <button id="resetButton">Reset Simulation</button>
 
-        <div class="info-box">
-            <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
-            <p><strong>Largest Body Mass (units):</strong> <span id="largestBodyMass">0</span></p>
-            <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
+            <div class="info-box">
+                <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
+                <p><strong>Largest Body Mass (units):</strong> <span id="largestBodyMass">0</span></p>
+                <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
+            </div>
         </div>
     </div>
 
@@ -113,12 +157,14 @@
         const ctx = canvas.getContext('2d');
         
         // --- DOM Elements ---
+        const controlPanel = document.getElementById('controlPanel');
+        const minimizeButton = document.getElementById('minimizeButton');
         const starMassSlider = document.getElementById('starMass');
         const diskDensitySlider = document.getElementById('diskDensity');
         const dustSizeSlider = document.getElementById('dustSize');
         const gravitySlider = document.getElementById('gravityConstant');
-        const orbitalVelocitySlider = document.getElementById('orbitalVelocity'); // New slider
-        const cometCountSlider = document.getElementById('cometCount'); // New slider
+        const orbitalVelocitySlider = document.getElementById('orbitalVelocity');
+        const cometCountSlider = document.getElementById('cometCount');
         const simSpeedSlider = document.getElementById('simSpeed');
         const resetButton = document.getElementById('resetButton');
         const timeElapsedEl = document.getElementById('timeElapsed');
@@ -129,7 +175,6 @@
         let animationFrameId;
         let simulationTime = 0;
         
-        // --- Simulation Parameters ---
         let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, SIMULATION_SPEED;
 
         function resizeCanvas() {
@@ -178,7 +223,6 @@
                 ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = this.color;
-                // Comets get a different colored glow
                 ctx.shadowColor = this.isComet ? 'rgba(180, 220, 255, 0.9)' : 'rgba(255, 255, 255, 0.7)';
                 ctx.shadowBlur = this.radius * 1.5 + 2;
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -227,7 +271,6 @@
 
             simulationTime = 0;
             
-            // Update labels on init to match default slider values
             document.querySelector('label[for="starMass"]').textContent = `Star Mass (${STAR_MASS.toFixed(1)})`;
             document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${NUM_PARTICLES} Particles)`;
             document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)} Radius)`;
@@ -247,7 +290,6 @@
             const maxDist = Math.min(centerX, centerY) * 0.8;
             const minDist = star.radius * 4;
 
-            // Create disk particles
             for (let i = 0; i < NUM_PARTICLES; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const dist = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist;
@@ -261,16 +303,15 @@
                 particles.push(p);
             }
 
-            // Create comets
             for (let i = 0; i < NUM_COMETS; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const dist = (Math.random() * 0.2 + 0.8) * maxDist; // Start them further out
+                const dist = (Math.random() * 0.2 + 0.8) * maxDist;
                 const x = centerX + Math.cos(angle) * dist;
                 const y = centerY + Math.sin(angle) * dist;
-                const radius = (Math.random() * 0.5 + 1.0) * INITIAL_DUST_SIZE; // Comets are a bit larger
-                const p = new Particle(x, y, radius, '#cceeff', true); // Light cyan color, isComet = true
+                const radius = (Math.random() * 0.5 + 1.0) * INITIAL_DUST_SIZE;
+                const p = new Particle(x, y, radius, '#cceeff', true);
                 const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
-                const cometVelocityFactor = 1.4; // Higher velocity for elliptical orbit
+                const cometVelocityFactor = 1.4;
                 p.vx = -Math.sin(angle) * orbitalVelocity * cometVelocityFactor;
                 p.vy = Math.cos(angle) * orbitalVelocity * cometVelocityFactor;
                 particles.push(p);
@@ -342,6 +383,11 @@
         // --- Event Listeners ---
         window.addEventListener('resize', init);
         resetButton.addEventListener('click', init);
+        
+        // --- NEW: Event listener for the minimize button ---
+        minimizeButton.addEventListener('click', () => {
+            controlPanel.classList.toggle('minimized');
+        });
         
         starMassSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Star Mass (${parseFloat(e.target.value).toFixed(1)})`; });
         diskDensitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Disk Density (${e.target.value} Particles)`; });
