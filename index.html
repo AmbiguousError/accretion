@@ -10,7 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
             overflow: hidden;
-            background-color: #111827; /* Tailwind gray-900 */
+            background-color: #111827;
         }
         canvas {
             display: block;
@@ -20,7 +20,7 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background-color: rgba(31, 41, 55, 0.8); /* Tailwind gray-800 with opacity */
+            background-color: rgba(31, 41, 55, 0.8);
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -41,7 +41,6 @@
             opacity: 0;
             pointer-events: none;
         }
-
         #minimizeButton {
             position: absolute;
             top: 10px;
@@ -57,12 +56,11 @@
         }
         #minimizeButton svg {
             transition: transform 0.4s ease-in-out;
-            color: #d1d5db; /* gray-300 */
+            color: #d1d5db;
         }
         .control-panel.minimized #minimizeButton svg {
             transform: rotate(180deg);
         }
-
         label {
             display: block;
             margin-bottom: 5px;
@@ -76,7 +74,7 @@
             width: 100%;
             padding: 10px;
             border-radius: 8px;
-            background-color: #3B82F6; /* Tailwind blue-500 */
+            background-color: #3B82F6;
             color: white;
             font-weight: 700;
             border: none;
@@ -84,13 +82,23 @@
             transition: background-color 0.3s;
         }
         button#resetButton:hover {
-            background-color: #2563EB; /* Tailwind blue-600 */
+            background-color: #2563EB;
         }
         .info-box {
             margin-top: 15px;
-            background-color: rgba(55, 65, 81, 0.5); /* Tailwind gray-700 with opacity */
+            background-color: rgba(55, 65, 81, 0.5);
             padding: 10px;
             border-radius: 8px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-container input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
         }
     </style>
 </head>
@@ -107,147 +115,169 @@
         <div class="panel-content">
             <h1 class="text-xl font-bold mb-4">Simulation Controls</h1>
             
-            <div>
-                <label for="starMass">Star Mass</label>
-                <input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1">
+            <div class="checkbox-container">
+                 <input type="checkbox" id="nBodyToggle">
+                 <label for="nBodyToggle">Enable N-Body Physics</label>
             </div>
             
             <div>
-                <label for="diskDensity">Disk Density (Particles)</label>
-                <input type="range" id="diskDensity" min="500" max="3000" value="1500" step="100">
+                <label for="theta">Sim Quality (Theta)</label>
+                <input type="range" id="theta" min="0" max="2" value="0.5" step="0.1">
             </div>
+            <hr class="border-gray-600 my-4"/>
             
-            <div>
-                <label for="dustSize">Initial Dust Size (Radius)</label>
-                <input type="range" id="dustSize" min="0.5" max="3" value="2" step="0.1">
-            </div>
-             <div>
-                <label for="gravityConstant">Gravitational Constant</label>
-                <input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10">
-            </div>
-            <div>
-                <label for="orbitalVelocity">Orbital Velocity %</label>
-                <input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01">
-            </div>
-            <div>
-                <label for="cometCount">Number of Comets</label>
-                <input type="range" id="cometCount" min="0" max="50" value="5" step="1">
-            </div>
-            <!-- NEW: Gas Drag Slider -->
-            <div>
-                <label for="gasDrag">Gas Drag</label>
-                <input type="range" id="gasDrag" min="0" max="0.001" value="0" step="0.00005">
-            </div>
+            <div><label for="starMass">Star Mass</label><input type="range" id="starMass" min="0.5" max="5" value="1" step="0.1"></div>
+            <div><label for="diskDensity">Disk Density</label><input type="range" id="diskDensity" min="100" max="1500" value="700" step="50"></div>
+            <div><label for="dustSize">Initial Dust Size</label><input type="range" id="dustSize" min="0.5" max="3" value="1.5" step="0.1"></div>
+            <div><label for="gravityConstant">Gravitational Constant</label><input type="range" id="gravityConstant" min="50" max="2000" value="600" step="10"></div>
+            <div><label for="orbitalVelocity">Orbital Velocity %</label><input type="range" id="orbitalVelocity" min="0.8" max="1.2" value="1.0" step="0.01"></div>
+            <div><label for="cometCount">Number of Comets</label><input type="range" id="cometCount" min="0" max="50" value="5" step="1"></div>
+            <div><label for="gasDrag">Gas Drag</label><input type="range" id="gasDrag" min="0" max="0.001" value="0" step="0.00005"></div>
 
             <button id="resetButton">Reset Simulation</button>
 
-            <div class="info-box">
-                <p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p>
-                <p><strong>Largest Body Mass (units):</strong> <span id="largestBodyMass">0</span></p>
-                <p><strong>Particle Count:</strong> <span id="particleCount">0</span></p>
-            </div>
+            <div class="info-box"><p><strong>Time Elapsed:</strong> <span id="timeElapsed">0</span> years</p><p><strong>Largest Body Mass:</strong> <span id="largestBodyMass">0</span></p><p><strong>Particle Count:</strong> <span id="particleCount">0</span></p></div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('simulationCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // --- DOM Elements ---
-        const controlPanel = document.getElementById('controlPanel');
-        const minimizeButton = document.getElementById('minimizeButton');
-        const starMassSlider = document.getElementById('starMass');
-        const diskDensitySlider = document.getElementById('diskDensity');
-        const dustSizeSlider = document.getElementById('dustSize');
-        const gravitySlider = document.getElementById('gravityConstant');
-        const orbitalVelocitySlider = document.getElementById('orbitalVelocity');
-        const cometCountSlider = document.getElementById('cometCount');
-        const gasDragSlider = document.getElementById('gasDrag'); // New slider
-        const resetButton = document.getElementById('resetButton');
-        const timeElapsedEl = document.getElementById('timeElapsed');
-        const largestBodyMassEl = document.getElementById('largestBodyMass');
-        const particleCountEl = document.getElementById('particleCount');
-
-        let particles = [];
-        let animationFrameId;
-        let simulationTime = 0;
-        
-        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, GAS_DRAG_FACTOR;
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-
-        class Star {
-            constructor(x, y, mass, radius) {
-                this.x = x;
-                this.y = y;
-                this.mass = mass;
-                this.radius = radius;
-            }
-
-            draw() {
-                ctx.save();
-                ctx.beginPath();
-                const grad = ctx.createRadialGradient(this.x, this.y, this.radius * 0.2, this.x, this.y, this.radius);
-                grad.addColorStop(0, 'rgba(255, 255, 200, 1)');
-                grad.addColorStop(0.5, 'rgba(255, 204, 0, 1)');
-                grad.addColorStop(1, 'rgba(255, 153, 0, 0)');
-                ctx.fillStyle = grad;
-                ctx.shadowColor = 'rgba(255, 255, 0, 0.5)';
-                ctx.shadowBlur = 50;
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+        // --- CLASSES ---
+        class Boundary {
+            constructor(x, y, w, h) {
+                this.x = x; this.y = y; this.w = w; this.h = h;
             }
         }
 
-        class Particle {
-            constructor(x, y, radius, color, isComet = false) {
-                this.x = x;
-                this.y = y;
-                this.vx = 0;
-                this.vy = 0;
+        class QuadTree {
+            constructor(boundary, capacity) {
+                this.boundary = boundary;
+                this.capacity = capacity;
+                this.particles = [];
+                this.divided = false;
+                this.mass = 0;
+                this.cm_x = 0;
+                this.cm_y = 0;
+            }
+
+            subdivide() {
+                let { x, y, w, h } = this.boundary;
+                let nw = new Boundary(x, y, w / 2, h / 2);
+                this.northwest = new QuadTree(nw, this.capacity);
+                let ne = new Boundary(x + w / 2, y, w / 2, h / 2);
+                this.northeast = new QuadTree(ne, this.capacity);
+                let sw = new Boundary(x, y + h / 2, w / 2, h / 2);
+                this.southwest = new QuadTree(sw, this.capacity);
+                let se = new Boundary(x + w / 2, y + h / 2, w / 2, h / 2);
+                this.southeast = new QuadTree(se, this.capacity);
+                this.divided = true;
+            }
+
+            insert(particle) {
+                if (this.particles.length < this.capacity) {
+                    this.particles.push(particle);
+                    return true;
+                }
+                if (!this.divided) {
+                    this.subdivide();
+                }
+                if (this.northeast.insert(particle)) return true;
+                if (this.northwest.insert(particle)) return true;
+                if (this.southeast.insert(particle)) return true;
+                if (this.southwest.insert(particle)) return true;
+            }
+            
+            updateMass() {
+                if (this.divided) {
+                    this.northwest.updateMass();
+                    this.northeast.updateMass();
+                    this.southwest.updateMass();
+                    this.southeast.updateMass();
+                    
+                    this.mass = this.northwest.mass + this.northeast.mass + this.southwest.mass + this.southeast.mass;
+                    this.cm_x = (this.northwest.cm_x * this.northwest.mass + this.northeast.cm_x * this.northeast.mass + this.southwest.cm_x * this.southwest.mass + this.southeast.cm_x * this.southeast.mass) / this.mass;
+                    this.cm_y = (this.northwest.cm_y * this.northwest.mass + this.northeast.cm_y * this.northeast.mass + this.southwest.cm_y * this.southwest.mass + this.southeast.cm_y * this.southeast.mass) / this.mass;
+                } else {
+                    this.mass = this.particles.reduce((sum, p) => sum + p.mass, 0);
+                    this.cm_x = this.particles.reduce((sum, p) => sum + p.x * p.mass, 0) / this.mass;
+                    this.cm_y = this.particles.reduce((sum, p) => sum + p.y * p.mass, 0) / this.mass;
+                }
+            }
+
+
+            calculateForce(p, theta) {
+                if (this.mass === 0 || (this.particles.length === 1 && this.particles[0] === p)) {
+                    return;
+                }
+                
+                let dx = this.cm_x - p.x;
+                let dy = this.cm_y - p.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist === 0) return;
+
+                if ((this.boundary.w / dist < theta) && !this.divided) {
+                    const force = (G * this.mass) / (dist * dist);
+                    p.ax += force * dx / dist;
+                    p.ay += force * dy / dist;
+                } else {
+                    if (this.divided) {
+                        this.northwest.calculateForce(p, theta);
+                        this.northeast.calculateForce(p, theta);
+                        this.southwest.calculateForce(p, theta);
+                        this.southeast.calculateForce(p, theta);
+                    } else {
+                        for (let other of this.particles) {
+                            if (p !== other) {
+                                let dx_p = other.x - p.x;
+                                let dy_p = other.y - p.y;
+                                let dist_p = Math.sqrt(dx_p*dx_p + dy_p*dy_p);
+                                if (dist_p > p.radius + other.radius) {
+                                     const force = (G * other.mass) / (dist_p * dist_p);
+                                     p.ax += force * dx_p / dist_p;
+                                     p.ay += force * dy_p / dist_p;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        class Star { /* ... (no changes) ... */
+            constructor(x,y,m,r){this.x=x;this.y=y;this.mass=m;this.radius=r;}
+            draw(){ctx.save();ctx.beginPath();const g=ctx.createRadialGradient(this.x,this.y,this.radius*.2,this.x,this.y,this.radius);g.addColorStop(0,'#ffffc8');g.addColorStop(.5,'#ffcc00');g.addColorStop(1,'#ff990000');ctx.fillStyle=g;ctx.shadowColor='#ffff0080';ctx.shadowBlur=50;ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();ctx.restore();}
+        }
+
+        class Particle { /* ... (added ax, ay, resetForce) ... */
+             constructor(x, y, radius, color, isComet = false) {
+                this.x = x; this.y = y; this.vx = 0; this.vy = 0;
+                this.ax = 0; this.ay = 0; // Acceleration
                 this.radius = radius;
-                this.mass = Math.PI * this.radius * this.radius;
+                this.mass = Math.PI * radius * radius;
                 this.color = color;
                 this.isComet = isComet;
                 this.collided = false;
             }
-
-            draw() {
-                ctx.save();
-                ctx.beginPath();
-                ctx.fillStyle = this.color;
-                ctx.shadowColor = this.isComet ? 'rgba(180, 220, 255, 0.9)' : 'rgba(255, 255, 255, 0.7)';
-                ctx.shadowBlur = this.radius * 1.5 + 2;
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-
+            resetForce() { this.ax = 0; this.ay = 0; }
+            draw(){ctx.save();ctx.beginPath();ctx.fillStyle=this.color;ctx.shadowColor=this.isComet?'#b4dfff':'#ffffffb3';ctx.shadowBlur=this.radius*1.5+2;ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();ctx.restore();}
             update(star) {
-                const dx = star.x - this.x;
-                const dy = star.y - this.y;
-                const distSq = dx * dx + dy * dy;
-                const dist = Math.sqrt(distSq);
-                
-                if (dist < star.radius) {
-                    this.collided = true;
-                    return;
+                // Force calculation is now done outside. This just applies it.
+                // Apply star gravity if N-Body is OFF
+                if (!N_BODY_ENABLED) {
+                    this.resetForce();
+                    const dx_s = star.x - this.x;
+                    const dy_s = star.y - this.y;
+                    const dist_s_sq = dx_s * dx_s + dy_s * dy_s;
+                    const dist_s = Math.sqrt(dist_s_sq);
+                    if (dist_s < star.radius) { this.collided = true; return; }
+                    const acc = (G * star.mass) / dist_s_sq;
+                    this.ax += acc * dx_s / dist_s;
+                    this.ay += acc * dy_s / dist_s;
                 }
 
-                // Gravitational acceleration
-                const acceleration = (G * star.mass) / distSq;
-                const ax = acceleration * (dx / dist);
-                const ay = acceleration * (dy / dist);
+                this.vx += this.ax;
+                this.vy += this.ay;
 
-                this.vx += ax;
-                this.vy += ay;
-
-                // --- NEW: Apply Gas Drag ---
-                // This slows the particle down slightly each frame, opposing its current velocity.
                 this.vx *= (1 - GAS_DRAG_FACTOR);
                 this.vy *= (1 - GAS_DRAG_FACTOR);
 
@@ -256,15 +286,22 @@
             }
         }
 
-        let star;
-
+        // --- GLOBAL VARS & SETUP ---
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const getEl = id => document.getElementById(id);
+        const controlPanel=getEl('controlPanel'), minimizeButton=getEl('minimizeButton'), nBodyToggle=getEl('nBodyToggle'), thetaSlider=getEl('theta'), starMassSlider=getEl('starMass'), diskDensitySlider=getEl('diskDensity'), dustSizeSlider=getEl('dustSize'), gravitySlider=getEl('gravityConstant'), orbitalVelocitySlider=getEl('orbitalVelocity'), cometCountSlider=getEl('cometCount'), gasDragSlider=getEl('gasDrag'), resetButton=getEl('resetButton'), timeElapsedEl=getEl('timeElapsed'), largestBodyMassEl=getEl('largestBodyMass'), particleCountEl=getEl('particleCount');
+        
+        let particles = [], star, qt, animationFrameId, simulationTime = 0;
+        let STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, GAS_DRAG_FACTOR, N_BODY_ENABLED, THETA;
+        
+        // --- CORE FUNCTIONS ---
         function init() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             resizeCanvas();
             
+            N_BODY_ENABLED = nBodyToggle.checked;
+            THETA = parseFloat(thetaSlider.value);
             STAR_MASS = parseFloat(starMassSlider.value);
             NUM_PARTICLES = parseInt(diskDensitySlider.value);
             INITIAL_DUST_SIZE = parseFloat(dustSizeSlider.value);
@@ -274,31 +311,18 @@
             GAS_DRAG_FACTOR = parseFloat(gasDragSlider.value);
 
             simulationTime = 0;
-            
-            document.querySelector('label[for="starMass"]').textContent = `Star Mass (${STAR_MASS.toFixed(1)})`;
-            document.querySelector('label[for="diskDensity"]').textContent = `Disk Density (${NUM_PARTICLES} Particles)`;
-            document.querySelector('label[for="dustSize"]').textContent = `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)} Radius)`;
-            document.querySelector('label[for="gravityConstant"]').textContent = `Gravitational Constant (${G})`;
-            document.querySelector('label[for="orbitalVelocity"]').textContent = `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR * 100).toFixed(0)}%)`;
-            document.querySelector('label[for="cometCount"]').textContent = `Number of Comets (${NUM_COMETS})`;
-            document.querySelector('label[for="gasDrag"]').textContent = `Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`;
+            updateLabels();
 
-            updateInfoPanel();
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
+            const centerX = canvas.width / 2, centerY = canvas.height / 2;
             star = new Star(centerX, centerY, STAR_MASS, 15 + (STAR_MASS - 1) * 5);
             particles = [];
-
-            const maxDist = Math.min(centerX, centerY) * 0.8;
-            const minDist = star.radius * 4;
-
+            
+            const maxDist = Math.min(centerX, centerY) * 0.8, minDist = star.radius * 4;
+            
             for (let i = 0; i < NUM_PARTICLES; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const dist = Math.sqrt(Math.random()) * (maxDist - minDist) + minDist;
-                const x = centerX + Math.cos(angle) * dist;
-                const y = centerY + Math.sin(angle) * dist;
+                const x = centerX + Math.cos(angle) * dist, y = centerY + Math.sin(angle) * dist;
                 const radius = (Math.random() * 0.5 + 0.5) * INITIAL_DUST_SIZE;
                 const p = new Particle(x, y, radius, 'white');
                 const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
@@ -306,96 +330,107 @@
                 p.vy = Math.cos(angle) * orbitalVelocity * ORBITAL_VELOCITY_FACTOR;
                 particles.push(p);
             }
-
-            for (let i = 0; i < NUM_COMETS; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const dist = (Math.random() * 0.2 + 0.8) * maxDist;
-                const x = centerX + Math.cos(angle) * dist;
-                const y = centerY + Math.sin(angle) * dist;
-                const radius = (Math.random() * 0.5 + 1.0) * INITIAL_DUST_SIZE;
-                const p = new Particle(x, y, radius, '#cceeff', true);
-                const orbitalVelocity = Math.sqrt((G * star.mass) / dist);
-                const cometVelocityFactor = 1.4;
-                p.vx = -Math.sin(angle) * orbitalVelocity * cometVelocityFactor;
-                p.vy = Math.cos(angle) * orbitalVelocity * cometVelocityFactor;
-                particles.push(p);
+             for (let i = 0; i < NUM_COMETS; i++) {
+                const angle=Math.random()*Math.PI*2, dist=(Math.random()*.2+.8)*maxDist, x=centerX+Math.cos(angle)*dist, y=centerY+Math.sin(angle)*dist, radius=(Math.random()*.5+1)*INITIAL_DUST_SIZE, p=new Particle(x,y,radius,'#cceeff',!0), orbitalVelocity=Math.sqrt(G*star.mass/dist), cometVelocityFactor=1.4;
+                p.vx=-Math.sin(angle)*orbitalVelocity*cometVelocityFactor; p.vy=Math.cos(angle)*orbitalVelocity*cometVelocityFactor; particles.push(p);
             }
-            
             animate();
         }
 
-        function checkCollisions() {
-            for (let i = 0; i < particles.length; i++) {
+        function checkCollisions() { /* ... (no changes) ... */
+             for (let i = 0; i < particles.length; i++) {
                 if(particles[i].collided) continue;
                 for (let j = i + 1; j < particles.length; j++) {
                     if(particles[j].collided) continue;
-
-                    const dx = particles[j].x - particles[i].x;
-                    const dy = particles[j].y - particles[i].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
+                    const dx=particles[j].x-particles[i].x, dy=particles[j].y-particles[i].y, dist=Math.sqrt(dx*dx+dy*dy);
                     if (dist < particles[i].radius + particles[j].radius) {
-                        const totalMass = particles[i].mass + particles[j].mass;
-                        const newVx = (particles[i].vx * particles[i].mass + particles[j].vx * particles[j].mass) / totalMass;
-                        const newVy = (particles[i].vy * particles[i].mass + particles[j].vy * particles[j].mass) / totalMass;
-                        const newX = (particles[i].x * particles[i].mass + particles[j].x * particles[j].mass) / totalMass;
-                        const newY = (particles[i].y * particles[i].mass + particles[j].y * particles[j].mass) / totalMass;
-                        const newRadius = Math.sqrt(Math.pow(particles[i].radius, 2) + Math.pow(particles[j].radius, 2));
-                        
-                        particles[i].x = newX;
-                        particles[i].y = newY;
-                        particles[i].vx = newVx;
-                        particles[i].vy = newVy;
-                        particles[i].radius = newRadius;
-                        particles[i].mass = totalMass;
-                        particles[j].collided = true;
+                        const totalMass=particles[i].mass+particles[j].mass, newVx=(particles[i].vx*particles[i].mass+particles[j].vx*particles[j].mass)/totalMass, newVy=(particles[i].vy*particles[i].mass+particles[j].vy*particles[j].mass)/totalMass, newX=(particles[i].x*particles[i].mass+particles[j].x*particles[j].mass)/totalMass, newY=(particles[i].y*particles[i].mass+particles[j].y*particles[j].mass)/totalMass, newRadius=Math.sqrt(Math.pow(particles[i].radius,2)+Math.pow(particles[j].radius,2));
+                        particles[i].x=newX;particles[i].y=newY;particles[i].vx=newVx;particles[i].vy=newVy;particles[i].radius=newRadius;particles[i].mass=totalMass;particles[j].collided=!0;
                     }
                 }
             }
             particles = particles.filter(p => !p.collided);
         }
+        
+        function updateLabels() {
+            const labelFor = (el, text) => el.previousElementSibling.textContent = text;
+            labelFor(thetaSlider, `Sim Quality (Theta: ${THETA.toFixed(1)})`);
+            labelFor(starMassSlider, `Star Mass (${STAR_MASS.toFixed(1)})`);
+            labelFor(diskDensitySlider, `Disk Density (${NUM_PARTICLES})`);
+            labelFor(dustSizeSlider, `Initial Dust Size (${INITIAL_DUST_SIZE.toFixed(1)})`);
+            labelFor(gravitySlider, `Gravitational Constant (${G})`);
+            labelFor(orbitalVelocitySlider, `Orbital Velocity % (${(ORBITAL_VELOCITY_FACTOR*100).toFixed(0)}%)`);
+            labelFor(cometCountSlider, `Number of Comets (${NUM_COMETS})`);
+            labelFor(gasDragSlider, `Gas Drag (${GAS_DRAG_FACTOR.toFixed(5)})`);
+            updateInfoPanel();
+        }
 
         function updateInfoPanel() {
-            let largestMass = 0;
-            if (particles.length > 0) {
-                 largestMass = particles.reduce((max, p) => p.mass > max ? p.mass : max, 0);
-            }
-            
+            let largestMass = particles.reduce((max, p) => p.mass > max ? p.mass : max, 0);
             timeElapsedEl.textContent = Math.floor(simulationTime).toLocaleString();
             largestBodyMassEl.textContent = largestMass.toFixed(2);
             particleCountEl.textContent = particles.length.toLocaleString();
         }
 
         function animate() {
+            // N-Body calculation
+            if (N_BODY_ENABLED) {
+                const boundary = new Boundary(0, 0, canvas.width, canvas.height);
+                qt = new QuadTree(boundary, 4);
+                
+                particles.forEach(p => {
+                    p.resetForce();
+                    qt.insert(p);
+                });
+                
+                qt.updateMass();
+
+                particles.forEach(p => {
+                    // Force from QuadTree (other particles)
+                    qt.calculateForce(p, THETA);
+
+                    // Force from Star
+                    const dx_s = star.x - p.x, dy_s = star.y - p.y;
+                    const dist_s_sq = dx_s * dx_s + dy_s * dy_s;
+                    if (dist_s_sq > 0) {
+                        const dist_s = Math.sqrt(dist_s_sq);
+                        if (dist_s < star.radius) { p.collided = true; return; }
+                        const acc = (G * star.mass) / dist_s_sq;
+                        p.ax += acc * dx_s / dist_s;
+                        p.ay += acc * dy_s / dist_s;
+                    }
+                });
+            }
+
+            // Update positions and check collisions
             particles.forEach(p => p.update(star));
             checkCollisions();
             simulationTime += 1;
 
+            // Draw
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             star.draw();
             particles.forEach(p => p.draw());
             
             updateInfoPanel();
-            
             animationFrameId = requestAnimationFrame(animate);
         }
-
-        // --- Event Listeners ---
+        
+        function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+        
+        // --- EVENT LISTENERS ---
         window.addEventListener('resize', init);
         resetButton.addEventListener('click', init);
+        minimizeButton.addEventListener('click', () => controlPanel.classList.toggle('minimized'));
         
-        minimizeButton.addEventListener('click', () => {
-            controlPanel.classList.toggle('minimized');
+        nBodyToggle.addEventListener('change', init);
+        thetaSlider.addEventListener('input', e => { THETA=parseFloat(e.target.value); labelFor(e.target, `Sim Quality (Theta: ${THETA.toFixed(1)})`); });
+        
+        // Simple listeners for reset-required sliders
+        [starMassSlider, diskDensitySlider, dustSizeSlider, gravitySlider, orbitalVelocitySlider, cometCountSlider, gasDragSlider].forEach(slider => {
+            slider.addEventListener('change', init); // Re-run init on change
         });
         
-        starMassSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Star Mass (${parseFloat(e.target.value).toFixed(1)})`; });
-        diskDensitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Disk Density (${e.target.value} Particles)`; });
-        dustSizeSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Initial Dust Size (${parseFloat(e.target.value).toFixed(1)} Radius)`; });
-        gravitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gravitational Constant (${e.target.value})`; });
-        orbitalVelocitySlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Orbital Velocity % (${(parseFloat(e.target.value) * 100).toFixed(0)}%)`; });
-        cometCountSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Number of Comets (${e.target.value})`; });
-        gasDragSlider.addEventListener('input', (e) => { e.target.previousElementSibling.textContent = `Gas Drag (${parseFloat(e.target.value).toFixed(5)})`; });
-
         init();
     </script>
 </body>
