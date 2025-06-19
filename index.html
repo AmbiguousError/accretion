@@ -111,8 +111,9 @@
             <div class="mb-3"><label for="cometCount" class="form-label">Number of Comets</label><input type="range" class="form-range" id="cometCount" min="0" max="50" value="50" step="1"></div>
             <div class="mb-3"><label for="gasDrag" class="form-label">Gas Drag</label><input type="range" class="form-range" id="gasDrag" min="0" max="0.001" value="0.00050" step="0.00005"></div>
             
-            <div class="d-grid gap-2 d-md-flex">
-                <button id="resetButton" class="btn btn-primary w-100">Reset Custom</button>
+            <div class="d-grid gap-2 mt-4">
+                <button id="restartButton" class="btn btn-primary w-100">Restart</button>
+                <button id="resetToDefaultButton" class="btn btn-secondary w-100">Reset to Default</button>
                 <button id="solSystemButton" class="btn btn-warning w-100">Load Solar System</button>
             </div>
             <div class="info-box mt-3 p-2 rounded bg-secondary bg-opacity-25">
@@ -127,9 +128,10 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const getEl = id => document.getElementById(id);
-            const elements = { canvas: getEl('simulationCanvas'), ctx: getEl('simulationCanvas').getContext('2d'), landingOverlay: getEl('landing-overlay'), startButton: getEl('start-simulation-button'), settingsButton: getEl('settings-button'), simSpeedSlider: getEl('simSpeed'), nBodyToggle: getEl('nBodyToggle'), thetaSlider: getEl('theta'), starTypeSelect: getEl('starType'), starMassSlider: getEl('starMass'), diskDensitySlider: getEl('diskDensity'), dustSizeSlider: getEl('dustSize'), gravitySlider: getEl('gravityConstant'), orbitalVelocitySlider: getEl('orbitalVelocity'), cometCountSlider: getEl('cometCount'), gasDragSlider: getEl('gasDrag'), resetButton: getEl('resetButton'), solSystemButton: getEl('solSystemButton'), timeElapsedEl: getEl('timeElapsed'), largestBodyMassEl: getEl('largestBodyMass'), particleCountEl: getEl('particleCount'), binaryToggle: getEl('binaryToggle'), binaryControls: getEl('binary-controls'), star2MassSlider: getEl('star2Mass'), star2DistSlider: getEl('star2Dist'), star2SpeedSlider: getEl('star2Speed'), trinaryToggle: getEl('trinaryToggle'), trinaryControls: getEl('trinary-controls'), star3MassSlider: getEl('star3Mass'), star3DistSlider: getEl('star3Dist'), star3SpeedSlider: getEl('star3Speed'), supernovaButton: getEl('supernova-button'), pulsarControls: getEl('pulsar-controls'), pulsarSpeedSlider: getEl('pulsarSpeed') };
+            const elements = { canvas: getEl('simulationCanvas'), ctx: getEl('simulationCanvas').getContext('2d'), landingOverlay: getEl('landing-overlay'), startButton: getEl('start-simulation-button'), settingsButton: getEl('settings-button'), simSpeedSlider: getEl('simSpeed'), nBodyToggle: getEl('nBodyToggle'), thetaSlider: getEl('theta'), starTypeSelect: getEl('starType'), starMassSlider: getEl('starMass'), diskDensitySlider: getEl('diskDensity'), dustSizeSlider: getEl('dustSize'), gravitySlider: getEl('gravityConstant'), orbitalVelocitySlider: getEl('orbitalVelocity'), cometCountSlider: getEl('cometCount'), gasDragSlider: getEl('gasDrag'), restartButton: getEl('restartButton'), solSystemButton: getEl('solSystemButton'), resetToDefaultButton: getEl('resetToDefaultButton'), timeElapsedEl: getEl('timeElapsed'), largestBodyMassEl: getEl('largestBodyMass'), particleCountEl: getEl('particleCount'), binaryToggle: getEl('binaryToggle'), binaryControls: getEl('binary-controls'), star2MassSlider: getEl('star2Mass'), star2DistSlider: getEl('star2Dist'), star2SpeedSlider: getEl('star2Speed'), trinaryToggle: getEl('trinaryToggle'), trinaryControls: getEl('trinary-controls'), star3MassSlider: getEl('star3Mass'), star3DistSlider: getEl('star3Dist'), star3SpeedSlider: getEl('star3Speed'), supernovaButton: getEl('supernova-button'), pulsarControls: getEl('pulsar-controls'), pulsarSpeedSlider: getEl('pulsarSpeed') };
             let particles = [], stars = [], supernova = null, qt, animationFrameId, simulationTime = 0, STAR_TYPE, STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, GAS_DRAG_FACTOR, N_BODY_ENABLED, THETA, N_BODY_G, SIMULATION_SPEED, BINARY_ENABLED, STAR2_MASS, STAR2_DIST, STAR2_SPEED, TRINARY_ENABLED, STAR3_MASS, STAR3_DIST, STAR3_SPEED, PULSAR_SPEED;
             let timeAccumulator = 0;
+            const SHATTER_THRESHOLD = 150;
             const SOFTENING_FACTOR = 20, SOFTENING_FACTOR_SQ = SOFTENING_FACTOR * SOFTENING_FACTOR, solarSystemData = [{ name: 'Mercury', au: .39, radius: 2, color: '#9f9f9f' }, { name: 'Venus', au: .72, radius: 3.5, color: '#d4c9a8' }, { name: 'Earth', au: 1, radius: 3.6, color: '#6b93d6' }, { name: 'Mars', au: 1.52, radius: 2.5, color: '#c1440e' }, { name: 'Jupiter', au: 5.2, radius: 9, color: '#d8ca9d' }, { name: 'Saturn', au: 9.58, radius: 8, color: '#f0e3a3' }, { name: 'Uranus', au: 19.22, radius: 6, color: '#aadae1' }, { name: 'Neptune', au: 30.05, radius: 5.8, color: '#5b5ddf' }];
 
             class Boundary { constructor(x,y,w,h){this.x=x;this.y=y;this.w=w;this.h=h;} contains(p){return p.x>=this.x&&p.x<this.x+this.w&&p.y>=this.y&&p.y<this.y+this.h;} }
@@ -164,8 +166,25 @@
             elements.startButton.addEventListener('click', () => { elements.landingOverlay.style.opacity = '0'; setTimeout(() => { elements.landingOverlay.style.display = 'none'; init(); }, 500); });
             elements.landingOverlay.classList.add('visible');
             window.addEventListener('resize', init);
-            elements.resetButton.addEventListener('click', init);
+            elements.restartButton.addEventListener('click', init);
             elements.solSystemButton.addEventListener('click', loadSolSystem);
+            elements.resetToDefaultButton.addEventListener('click', () => {
+                // Reset sliders to their default values
+                elements.simSpeedSlider.value = 1;
+                elements.nBodyToggle.checked = true;
+                elements.thetaSlider.value = 1.0;
+                elements.starTypeSelect.value = 'star';
+                elements.starMassSlider.value = 1.0;
+                elements.binaryToggle.checked = false;
+                elements.trinaryToggle.checked = false;
+                elements.diskDensitySlider.value = 2000;
+                elements.dustSizeSlider.value = 0.5;
+                elements.gravitySlider.value = 1.0;
+                elements.orbitalVelocitySlider.value = 1.0;
+                elements.cometCountSlider.value = 50;
+                elements.gasDragSlider.value = 0.00050;
+                init();
+            });
             elements.binaryToggle.addEventListener('change', init);
             elements.trinaryToggle.addEventListener('change', init);
             elements.nBodyToggle.addEventListener('change', init);
