@@ -17,6 +17,20 @@
             display: block; 
             background-color: #000; 
         }
+        #ui-toggle-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 51; /* Above other controls */
+        }
+        #supernova-button-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            gap: 10px;
+        }
         #supernova-button {
             font-weight: bold;
             border-color: #dc3545;
@@ -47,7 +61,7 @@
             max-height: 100vh;
             overflow-y: auto;
         }
-        /* New Canvas Controls Container */
+        /* Canvas Controls Container */
         #canvas-controls-container {
             position: absolute;
             bottom: 0;
@@ -92,27 +106,37 @@
         </div>
     </div>
     
-    <div id="canvas-controls-container" class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-md-3 text-center text-md-start mb-2 mb-md-0">
-                <button class="btn btn-dark" id="settings-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#controlPanelOffcanvas" aria-controls="controlPanelOffcanvas">Settings</button>
-            </div>
-            <div class="col-md-6">
-                <div id="speed-control-container">
-                    <label for="simSpeed" class="form-label me-2 mb-0">Speed</label>
-                    <input type="range" class="form-range" id="simSpeed" min="0.1" max="5" value="1" step="0.1">
-                    <span id="speed-value" class="ms-2">1.00x</span>
+    <button class="btn btn-dark btn-sm" id="ui-toggle-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+          <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+          <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+        </svg>
+    </button>
+    
+    <div id="on-canvas-ui">
+        <div id="supernova-button-container">
+            <button id="stabilize-button" class="btn btn-info">Stabilize</button>
+            <button id="supernova-button" class="btn btn-outline-danger">Supernova</button>
+        </div>
+
+        <div id="canvas-controls-container" class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-lg-3 col-md-12 text-center text-lg-start mb-2 mb-lg-0">
+                    <button class="btn btn-primary" id="settings-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#controlPanelOffcanvas" aria-controls="controlPanelOffcanvas">Settings</button>
                 </div>
-                 <div class="d-flex gap-2 justify-content-center mt-2">
-                    <button id="restartButton" class="btn btn-primary">Restart</button>
-                    <button id="resetToDefaultButton" class="btn btn-secondary">Reset to Default</button>
-                    <button id="solSystemButton" class="btn btn-warning">Load Solar System</button>
+                <div class="col-lg-6 col-md-12">
+                    <div id="speed-control-container">
+                        <label for="simSpeed" class="form-label me-2 mb-0">Speed</label>
+                        <input type="range" class="form-range" id="simSpeed" min="0.1" max="5" value="1" step="0.1">
+                        <span id="speed-value" class="ms-2">1.00x</span>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3 text-center text-md-end mt-2 mt-md-0">
-                <div class="d-flex gap-2 justify-content-center justify-content-md-end">
-                    <button id="stabilize-button" class="btn btn-info">Stabilize</button>
-                    <button id="supernova-button" class="btn btn-outline-danger">Supernova</button>
+                <div class="col-lg-3 col-md-12 mt-2 mt-lg-0">
+                     <div class="d-flex gap-2 justify-content-center justify-content-lg-end">
+                        <button id="restartButton" class="btn btn-primary">Restart</button>
+                        <button id="resetToDefaultButton" class="btn btn-secondary">Defaults</button>
+                        <button id="solSystemButton" class="btn btn-warning">Sol System</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -137,7 +161,7 @@
             <div id="binary-controls" class="d-none ps-3"><div class="mb-3"><label for="star2Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star2Mass" min="0.2" max="5" value="0.3" step="0.1"></div><div class="mb-3"><label for="star2Dist" class="form-label">Companion Distance</label><input type="range" class="form-range" id="star2Dist" min="150" max="400" value="250" step="10"></div><div class="mb-3"><label for="star2Speed" class="form-label">Companion Speed %</label><input type="range" class="form-range" id="star2Speed" min="0.5" max="1.5" value="1.0" step="0.05"></div></div>
             <div class="form-check mb-3"><input type="checkbox" class="form-check-input" id="trinaryToggle"><label for="trinaryToggle" class="form-check-label">Enable Trinary Star</label></div>
             <div id="trinary-controls" class="d-none ps-3"><div class="mb-3"><label for="star3Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star3Mass" min="0.2" max="5" value="0.3" step="0.1"></div><div class="mb-3"><label for="star3Dist" class="form-label">Companion Distance</label><input type="range" class="form-range" id="star3Dist" min="50" max="200" value="100" step="5"></div><div class="mb-3"><label for="star3Speed" class="form-label">Companion Speed %</label><input type="range" class="form-range" id="star3Speed" min="0.5" max="1.5" value="1.0" step="0.05"></div></div>
-
+            
             <hr class="my-4"/>
             <h2 class="h5">Protoplanetary Disk</h2>
             <div class="mb-3"><label for="diskDensity" class="form-label">Disk Density</label><input type="range" class="form-range" id="diskDensity" min="100" max="5000" value="2000" step="50"></div>
@@ -159,7 +183,7 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const getEl = id => document.getElementById(id);
-            const elements = { canvas: getEl('simulationCanvas'), ctx: getEl('simulationCanvas').getContext('2d'), landingOverlay: getEl('landing-overlay'), startButton: getEl('start-simulation-button'), settingsButton: getEl('settings-button'), simSpeedSlider: getEl('simSpeed'), speedValue: getEl('speed-value'), nBodyToggle: getEl('nBodyToggle'), thetaSlider: getEl('theta'), starTypeSelect: getEl('starType'), starMassSlider: getEl('starMass'), diskDensitySlider: getEl('diskDensity'), dustSizeSlider: getEl('dustSize'), gravitySlider: getEl('gravityConstant'), orbitalVelocitySlider: getEl('orbitalVelocity'), cometCountSlider: getEl('cometCount'), gasDragSlider: getEl('gasDrag'), restartButton: getEl('restartButton'), solSystemButton: getEl('solSystemButton'), resetToDefaultButton: getEl('resetToDefaultButton'), timeElapsedEl: getEl('timeElapsed'), largestBodyMassEl: getEl('largestBodyMass'), particleCountEl: getEl('particleCount'), binaryToggle: getEl('binaryToggle'), binaryControls: getEl('binary-controls'), star2MassSlider: getEl('star2Mass'), star2DistSlider: getEl('star2Dist'), star2SpeedSlider: getEl('star2Speed'), trinaryToggle: getEl('trinaryToggle'), trinaryControls: getEl('trinary-controls'), star3MassSlider: getEl('star3Mass'), star3DistSlider: getEl('star3Dist'), star3SpeedSlider: getEl('star3Speed'), supernovaButton: getEl('supernova-button'), pulsarControls: getEl('pulsar-controls'), pulsarSpeedSlider: getEl('pulsarSpeed'), stabilizeButton: getEl('stabilize-button') };
+            const elements = { canvas: getEl('simulationCanvas'), ctx: getEl('simulationCanvas').getContext('2d'), landingOverlay: getEl('landing-overlay'), startButton: getEl('start-simulation-button'), settingsButton: getEl('settings-button'), simSpeedSlider: getEl('simSpeed'), speedValue: getEl('speed-value'), nBodyToggle: getEl('nBodyToggle'), thetaSlider: getEl('theta'), starTypeSelect: getEl('starType'), starMassSlider: getEl('starMass'), diskDensitySlider: getEl('diskDensity'), dustSizeSlider: getEl('dustSize'), gravitySlider: getEl('gravityConstant'), orbitalVelocitySlider: getEl('orbitalVelocity'), cometCountSlider: getEl('cometCount'), gasDragSlider: getEl('gasDrag'), restartButton: getEl('restartButton'), solSystemButton: getEl('solSystemButton'), resetToDefaultButton: getEl('resetToDefaultButton'), timeElapsedEl: getEl('timeElapsed'), largestBodyMassEl: getEl('largestBodyMass'), particleCountEl: getEl('particleCount'), binaryToggle: getEl('binaryToggle'), binaryControls: getEl('binary-controls'), star2MassSlider: getEl('star2Mass'), star2DistSlider: getEl('star2Dist'), star2SpeedSlider: getEl('star2Speed'), trinaryToggle: getEl('trinaryToggle'), trinaryControls: getEl('trinary-controls'), star3MassSlider: getEl('star3Mass'), star3DistSlider: getEl('star3Dist'), star3SpeedSlider: getEl('star3Speed'), supernovaButton: getEl('supernova-button'), pulsarControls: getEl('pulsar-controls'), pulsarSpeedSlider: getEl('pulsarSpeed'), stabilizeButton: getEl('stabilize-button'), uiToggleButton: getEl('ui-toggle-button'), onCanvasUI: getEl('on-canvas-ui') };
             let particles = [], stars = [], supernova = null, qt, animationFrameId, simulationTime = 0, STAR_TYPE, STAR_MASS, NUM_PARTICLES, INITIAL_DUST_SIZE, G, ORBITAL_VELOCITY_FACTOR, NUM_COMETS, GAS_DRAG_FACTOR, N_BODY_ENABLED, THETA, N_BODY_G, SIMULATION_SPEED, BINARY_ENABLED, STAR2_MASS, STAR2_DIST, STAR2_SPEED, TRINARY_ENABLED, STAR3_MASS, STAR3_DIST, STAR3_SPEED, PULSAR_SPEED;
             let timeAccumulator = 0;
             const SHATTER_THRESHOLD = 150;
