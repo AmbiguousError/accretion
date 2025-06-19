@@ -17,20 +17,6 @@
             display: block; 
             background-color: #000; 
         }
-        #settings-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 50;
-        }
-        #supernova-button-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 50;
-            display: flex;
-            gap: 10px;
-        }
         #supernova-button {
             font-weight: bold;
             border-color: #dc3545;
@@ -64,22 +50,18 @@
         /* New Canvas Controls Container */
         #canvas-controls-container {
             position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 0;
+            width: 100%;
             z-index: 50;
             background-color: rgba(33, 37, 41, 0.85);
             backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
+            padding: 10px;
         }
         #speed-control-container {
             display: flex;
             align-items: center;
             color: white;
+            justify-content: center;
         }
         #speed-control-container .form-range {
             width: 150px;
@@ -109,30 +91,37 @@
             </div>
         </div>
     </div>
-
-    <button class="btn btn-dark" id="settings-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#controlPanelOffcanvas" aria-controls="controlPanelOffcanvas">Settings</button>
-
-    <div id="supernova-button-container">
-        <button id="stabilize-button" class="btn btn-info">Stabilize System</button>
-        <button id="supernova-button" class="btn btn-outline-danger">GO SUPERNOVA</button>
+    
+    <div id="canvas-controls-container" class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center text-md-start mb-2 mb-md-0">
+                <button class="btn btn-dark" id="settings-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#controlPanelOffcanvas" aria-controls="controlPanelOffcanvas">Settings</button>
+            </div>
+            <div class="col-md-6">
+                <div id="speed-control-container">
+                    <label for="simSpeed" class="form-label me-2 mb-0">Speed</label>
+                    <input type="range" class="form-range" id="simSpeed" min="0.1" max="5" value="1" step="0.1">
+                    <span id="speed-value" class="ms-2">1.00x</span>
+                </div>
+                 <div class="d-flex gap-2 justify-content-center mt-2">
+                    <button id="restartButton" class="btn btn-primary">Restart</button>
+                    <button id="resetToDefaultButton" class="btn btn-secondary">Reset to Default</button>
+                    <button id="solSystemButton" class="btn btn-warning">Load Solar System</button>
+                </div>
+            </div>
+            <div class="col-md-3 text-center text-md-end mt-2 mt-md-0">
+                <div class="d-flex gap-2 justify-content-center justify-content-md-end">
+                    <button id="stabilize-button" class="btn btn-info">Stabilize</button>
+                    <button id="supernova-button" class="btn btn-outline-danger">Supernova</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="canvas-controls-container">
-        <div id="speed-control-container">
-            <label for="simSpeed" class="form-label me-2 mb-0">Speed</label>
-            <input type="range" class="form-range" id="simSpeed" min="0.1" max="5" value="1" step="0.1">
-            <span id="speed-value" class="ms-2">1.00x</span>
-        </div>
-        <div class="d-flex gap-2">
-            <button id="restartButton" class="btn btn-primary">Restart</button>
-            <button id="resetToDefaultButton" class="btn btn-secondary">Reset to Default</button>
-            <button id="solSystemButton" class="btn btn-warning">Load Solar System</button>
-        </div>
-    </div>
 
     <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="controlPanelOffcanvas" aria-labelledby="controlPanelOffcanvasLabel">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="controlPanelOffcanvasLabel">Simulation Controls</h5>
+            <h5 class="offcanvas-title" id="controlPanelOffcanvasLabel">Simulation Settings</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
@@ -148,7 +137,7 @@
             <div id="binary-controls" class="d-none ps-3"><div class="mb-3"><label for="star2Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star2Mass" min="0.2" max="5" value="0.3" step="0.1"></div><div class="mb-3"><label for="star2Dist" class="form-label">Companion Distance</label><input type="range" class="form-range" id="star2Dist" min="150" max="400" value="250" step="10"></div><div class="mb-3"><label for="star2Speed" class="form-label">Companion Speed %</label><input type="range" class="form-range" id="star2Speed" min="0.5" max="1.5" value="1.0" step="0.05"></div></div>
             <div class="form-check mb-3"><input type="checkbox" class="form-check-input" id="trinaryToggle"><label for="trinaryToggle" class="form-check-label">Enable Trinary Star</label></div>
             <div id="trinary-controls" class="d-none ps-3"><div class="mb-3"><label for="star3Mass" class="form-label">Companion Mass</label><input type="range" class="form-range" id="star3Mass" min="0.2" max="5" value="0.3" step="0.1"></div><div class="mb-3"><label for="star3Dist" class="form-label">Companion Distance</label><input type="range" class="form-range" id="star3Dist" min="50" max="200" value="100" step="5"></div><div class="mb-3"><label for="star3Speed" class="form-label">Companion Speed %</label><input type="range" class="form-range" id="star3Speed" min="0.5" max="1.5" value="1.0" step="0.05"></div></div>
-            
+
             <hr class="my-4"/>
             <h2 class="h5">Protoplanetary Disk</h2>
             <div class="mb-3"><label for="diskDensity" class="form-label">Disk Density</label><input type="range" class="form-range" id="diskDensity" min="100" max="5000" value="2000" step="50"></div>
@@ -223,7 +212,8 @@
                 elements.gasDragSlider.value = 0;
                 updateLabels();
             });
-            [elements.simSpeedSlider, elements.thetaSlider, elements.starMassSlider, elements.diskDensitySlider, elements.dustSizeSlider, elements.gravitySlider, elements.orbitalVelocitySlider, elements.cometCountSlider, elements.gasDragSlider, elements.star2MassSlider, elements.star2DistSlider, elements.star2SpeedSlider, elements.star3MassSlider, elements.star3DistSlider, elements.star3SpeedSlider, elements.starTypeSelect, elements.pulsarSpeedSlider].forEach(s => { if (s) { s.addEventListener('input', () => { readAndSetParams(); if (s.id !== 'simSpeed' && s.id !== 'theta') init(); }); } });
+            [elements.simSpeedSlider, elements.thetaSlider, elements.starMassSlider, elements.diskDensitySlider, elements.dustSizeSlider, elements.gravitySlider, elements.orbitalVelocitySlider, elements.cometCountSlider, elements.gasDragSlider, elements.star2MassSlider, elements.star2DistSlider, elements.star2SpeedSlider, elements.star3MassSlider, elements.star3DistSlider, elements.star3SpeedSlider, elements.starTypeSelect, elements.pulsarSpeedSlider].forEach(s => { if (s) { s.addEventListener('input', () => { readAndSetParams(); }); } });
+            elements.starTypeSelect.addEventListener('change', init);
         });
     </script>
 </body>
