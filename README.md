@@ -76,4 +76,4 @@ To run this project locally:
 
 ## License
 
-[Specify your license here, e.g., MIT, Apache 2.0, etc.]
+MIT License
