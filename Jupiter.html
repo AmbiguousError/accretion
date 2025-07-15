@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Evolution Simulator</title>
+    <title>Rare Earth Simulator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -32,33 +32,29 @@
             width: 20px; height: 20px; background: #f97316;
             border-radius: 50%; cursor: pointer;
         }
-        input[type="range"]::-moz-range-thumb {
-            width: 20px; height: 20px; background: #f97316;
-            border-radius: 50%; cursor: pointer;
-        }
         .hidden { display: none; }
+        .grand-tack-btn {
+            background-color: #8b5cf6; /* Tailwind violet-500 */
+        }
+        .grand-tack-btn:hover {
+            background-color: #7c3aed; /* Tailwind violet-600 */
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <!-- Landing Page -->
     <div id="landingPage" class="text-center max-w-3xl">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Solar System Evolution Simulator</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">The Rare Earth Simulator</h1>
         <div class="text-left text-gray-300 space-y-4 p-6 rounded-lg bg-gray-800 border border-gray-700">
-            <p>This is an <span class="font-bold text-yellow-400">N-body physics simulation</span> that models how our solar system might have evolved differently.</p>
-            <h2 class="text-xl font-semibold text-white pt-2">How it Works:</h2>
-            <ul class="list-disc list-inside space-y-2">
-                <li><span class="font-semibold text-white">Gravity Engine:</span> Every body is constantly pulling on every other body, creating dynamic, chaotic orbits.</li>
-                <li><span class="font-semibold text-white">The Snow Line:</span> Asteroids outside the Sun's "snow line" start as <span class="text-cyan-400">icy</span>; those inside start as <span class="text-yellow-700">rocky</span>.</li>
-                <li><span class="font-semibold text-white">Visual Scaling:</span> For clarity, the on-screen sizes of the planets are exaggerated. The simulation's physics are driven by their actual <span class="font-bold">mass</span> (e.g., Sun: 1000, Jupiter: 318), not their visual size.</li>
-            </ul>
-            <h2 class="text-xl font-semibold text-white pt-2">Architect the System:</h2>
+            <p>This simulation explores the delicate conditions that make a planet like Earth habitable. How many things had to go right?</p>
+            <h2 class="text-xl font-semibold text-white pt-2">Features to Explore:</h2>
              <ul class="list-disc list-inside space-y-2">
-                <li><span class="font-semibold text-white">Planet Toggles:</span> Use checkboxes to add or remove planets and see how the system's stability changes.</li>
-                <li><span class="font-semibold text-white">Asteroid Slider:</span> Control the number of asteroids to balance performance and detail.</li>
-                <li><span class="font-semibold text-white">Jupiter's Orbit & Heat:</span> Adjust Jupiter's starting position and activate its "heat bubble" to see how it shapes the system.</li>
-            </ul>
-            <p class="pt-4 font-semibold">Design your own solar system and run experiments to see what happens!</p>
+                <li><span class="font-semibold text-green-400">The Habitable Zone:</span> A green ring shows the "Goldilocks Zone" where liquid water can exist.</li>
+                <li><span class="font-semibold text-white">Impact Clock:</span> The dashboard tracks the years since Earth's last major asteroid impact, highlighting the need for stability.</li>
+                <li><span class="font-semibold text-violet-400">The "Grand Tack":</span> Activate this special scenario to see how Jupiter's ancient migration might have been essential for life. This scenario starts <span class="font-bold">before the inner planets have formed</span>, showing Jupiter clearing a path through a disk of smaller bodies.</li>
+             </ul>
+            <p class="pt-4 font-semibold">Experiment with the controls to see how fragile a habitable world truly is.</p>
         </div>
         <button id="startButton" class="mt-8 px-8 py-3 bg-orange-600 text-white font-bold text-lg rounded-lg hover:bg-orange-700 transition-colors duration-300">Start Simulation</button>
     </div>
@@ -66,21 +62,20 @@
     <!-- Simulation Elements (Initially Hidden) -->
     <div id="simulationContainer" class="hidden w-full flex flex-col items-center">
         <div class="text-center mb-4">
-            <h1 class="text-2xl md:text-3xl font-bold text-white">Solar System Simulator</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-white">Rare Earth Simulator</h1>
         </div>
 
         <div class="w-full max-w-6xl flex flex-col lg:flex-row gap-4">
             <!-- Left Column: Controls and Canvas -->
             <div class="flex-grow flex flex-col items-center">
                 <div class="control-panel p-4 rounded-lg shadow-lg mb-4 w-full max-w-md">
-                    <!-- Planet Toggles -->
+                    <button id="grandTackBtn" class="w-full grand-tack-btn text-white font-bold py-2 px-4 rounded-lg mb-4 transition-colors">Run "Grand Tack" Scenario</button>
                     <div class="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="mercuryToggle" checked class="h-5 w-5 rounded"><span>Mercury</span></label>
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="venusToggle" checked class="h-5 w-5 rounded"><span>Venus</span></label>
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="earthToggle" checked class="h-5 w-5 rounded"><span>Earth</span></label>
                         <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="marsToggle" checked class="h-5 w-5 rounded"><span>Mars</span></label>
                     </div>
-                    <!-- Jupiter Controls -->
                     <div class="flex items-center justify-between mb-4">
                         <label for="hotJupiterToggle" class="font-semibold cursor-pointer select-none">"Hot Jupiter" Effect 🔥</label>
                         <input type="checkbox" id="hotJupiterToggle" class="h-6 w-6 rounded">
@@ -89,14 +84,12 @@
                         <label for="jupiterOrbitSlider" class="font-semibold">Jupiter's Orbit: <span id="jupiterOrbitLabel">5.2</span> AU</label>
                         <input type="range" id="jupiterOrbitSlider" min="3.0" max="7.0" value="5.2" step="0.1" class="w-full mt-1">
                     </div>
-                     <!-- Asteroid Slider -->
                     <div class="mt-4">
                         <label for="asteroidSlider" class="font-semibold">Asteroids: <span id="asteroidLabel">400</span></label>
                         <input type="range" id="asteroidSlider" min="100" max="1000" value="400" step="50" class="w-full mt-1">
                     </div>
                 </div>
-                
-                <div class="w-full max-w-3xl aspect-square">
+                <div class="w-full max-w-3xl aspect-square relative">
                     <canvas id="solarSystemCanvas" class="w-full h-full"></canvas>
                 </div>
             </div>
@@ -119,14 +112,8 @@
         const canvas = document.getElementById('solarSystemCanvas');
         const ctx = canvas.getContext('2d');
         const dashboardContent = document.getElementById('dashboard-content');
-        
-        // --- CONTROLS ---
-        const planetToggles = {
-            mercury: document.getElementById('mercuryToggle'),
-            venus: document.getElementById('venusToggle'),
-            earth: document.getElementById('earthToggle'),
-            mars: document.getElementById('marsToggle')
-        };
+        const grandTackBtn = document.getElementById('grandTackBtn');
+        const planetToggles = { mercury: document.getElementById('mercuryToggle'), venus: document.getElementById('venusToggle'), earth: document.getElementById('earthToggle'), mars: document.getElementById('marsToggle') };
         const hotJupiterToggle = document.getElementById('hotJupiterToggle');
         const jupiterOrbitSlider = document.getElementById('jupiterOrbitSlider');
         const jupiterOrbitLabel = document.getElementById('jupiterOrbitLabel');
@@ -137,26 +124,27 @@
         const G = 60; 
         const TIMESTEP = 0.01;
         const SUN_SNOW_LINE_AU = 2.7;
-        const JUPITER_LOCAL_SNOW_LINE_AU = 0.8; // Fixed heat zone for Jupiter
+        const HABITABLE_ZONE = { inner: 0.9, outer: 1.4 }; // In AU
 
         let bodies = [];
         let center = { x: 0, y: 0 };
         let scale = 1; // Pixels per AU
         let simStats = {};
         let numAsteroids = 400;
+        let grandTackState = 'off'; // 'off', 'inward', 'outward', 'done'
 
         // --- BODY CLASS ---
         class Body {
             constructor(name, mass, radius, color, orbitAU) {
                 this.name = name; this.mass = mass; this.radius = radius;
                 this.color = color; this.orbitAU = orbitAU;
+                this.originalColor = color;
                 this.x = 0; this.y = 0; this.vx = 0; this.vy = 0;
                 this.ax = 0; this.ay = 0;
                 this.type = (name === 'asteroid') ? 'asteroid' : 'planet';
                 this.isAlive = true;
                 this.collisionRadius = radius; 
             }
-            
             addForce(otherBody) {
                 const dx = otherBody.x - this.x;
                 const dy = otherBody.y - this.y;
@@ -167,7 +155,6 @@
                 this.ax += force * (dx / dist) / this.mass;
                 this.ay += force * (dy / dist) / this.mass;
             }
-
             updatePosition() {
                 this.vx += this.ax * TIMESTEP;
                 this.vy += this.ay * TIMESTEP;
@@ -175,7 +162,6 @@
                 this.y += this.vy * TIMESTEP;
                 this.ax = 0; this.ay = 0;
             }
-
             draw() {
                 if (this.type === 'asteroid') {
                     ctx.fillStyle = this.isIcy ? '#22d3ee' : '#a16207';
@@ -198,50 +184,59 @@
             scale = canvas.width / (parseFloat(jupiterOrbitSlider.max) * 2.2);
             
             bodies = [];
-            simStats = { ejected: 0 };
+            simStats = { ejected: 0, timeSinceImpact: 0 };
+            const isGrandTack = grandTackState !== 'off';
 
-            // --- PLANET DEFINITIONS ---
+            // Disable controls during Grand Tack for clarity
+            Object.values(planetToggles).forEach(t => { t.disabled = isGrandTack; });
+            jupiterOrbitSlider.disabled = isGrandTack;
+            hotJupiterToggle.disabled = isGrandTack;
+
+            const jupiterStartOrbit = isGrandTack ? 3.5 : parseFloat(jupiterOrbitSlider.value);
+
             const planetDefs = {
                 mercury: { mass: 0.055, radius: 2, color: '#a8a29e', orbitAU: 0.4 },
                 venus:   { mass: 0.815, radius: 4, color: '#fcd34d', orbitAU: 0.7 },
                 earth:   { mass: 1.0,   radius: 5, color: '#3b82f6', orbitAU: 1.0 },
                 mars:    { mass: 0.107, radius: 3, color: '#f87171', orbitAU: 1.5 },
-                jupiter: { mass: 318,   radius: 12, color: '#f97316', orbitAU: parseFloat(jupiterOrbitSlider.value) }
+                jupiter: { mass: 318,   radius: 12, color: '#f97316', orbitAU: jupiterStartOrbit }
             };
 
             const sun = new Body('Sun', 1000, 10, 'gold', 0);
             sun.x = center.x; sun.y = center.y;
-            sun.collisionRadius = sun.radius * 2.5; // Larger hitbox
+            sun.collisionRadius = sun.radius * 2.5;
             bodies.push(sun);
+            simStats.sun = 0;
 
-            // Add planets based on toggles
-            for (const name in planetToggles) {
-                if (planetToggles[name].checked) {
-                    const p = planetDefs[name];
-                    const planet = new Body(name, p.mass, p.radius, p.color, p.orbitAU);
-                    const orbit = p.orbitAU * scale;
-                    const vel = Math.sqrt(G * sun.mass / orbit);
-                    planet.x = center.x + orbit; planet.y = center.y; planet.vy = vel;
-                    planet.collisionRadius = planet.radius * 3; // Larger hitbox
-                    bodies.push(planet);
-                    simStats[name] = 0; // Initialize collision stat
+            // Add planets only if NOT in Grand Tack mode
+            if (!isGrandTack) {
+                for (const name in planetToggles) {
+                    if (planetToggles[name].checked) {
+                        const p = planetDefs[name];
+                        const planet = new Body(name, p.mass, p.radius, p.color, p.orbitAU);
+                        const orbit = p.orbitAU * scale;
+                        const vel = Math.sqrt(G * sun.mass / orbit);
+                        planet.x = center.x + orbit; planet.y = center.y; planet.vy = vel;
+                        planet.collisionRadius = planet.radius * 3;
+                        bodies.push(planet);
+                        simStats[name] = 0;
+                    }
                 }
             }
-            // Add Jupiter separately
+
             const p = planetDefs.jupiter;
             const jupiter = new Body('Jupiter', p.mass, p.radius, p.color, p.orbitAU);
             const orbit = p.orbitAU * scale;
             const vel = Math.sqrt(G * sun.mass / orbit);
             jupiter.x = center.x + orbit; jupiter.y = center.y; jupiter.vy = vel;
-            jupiter.collisionRadius = jupiter.radius * 1.5; // Jupiter is already big
+            jupiter.collisionRadius = jupiter.radius * 1.5;
             bodies.push(jupiter);
             simStats.jupiter = 0;
-            simStats.sun = 0;
 
-            // Add Asteroids
             numAsteroids = parseInt(asteroidSlider.value);
+            // Outer Asteroid Belt
             for (let i = 0; i < numAsteroids; i++) {
-                const orbitAU = 2.0 + Math.random() * 2.0;
+                const orbitAU = 2.0 + Math.random() * 3.0;
                 const asteroid = new Body('asteroid', 0.0001, 1, 'gray', orbitAU);
                 const astOrbit = orbitAU * scale;
                 const angle = Math.random() * 2 * Math.PI;
@@ -253,6 +248,26 @@
                 asteroid.isIcy = (orbitAU > SUN_SNOW_LINE_AU);
                 bodies.push(asteroid);
             }
+            
+            // Inner Protoplanetary Disk for Grand Tack
+            if (isGrandTack) {
+                const numInnerBodies = 300;
+                for (let i = 0; i < numInnerBodies; i++) {
+                    const orbitAU = 0.5 + Math.random() * 1.3; // 0.5 to 1.8 AU
+                    const asteroid = new Body('asteroid', 0.01, 1, 'gray', orbitAU);
+                    const astOrbit = orbitAU * scale;
+                    const angle = Math.random() * 2 * Math.PI;
+                    const astVel = Math.sqrt(G * sun.mass / astOrbit);
+                    asteroid.x = center.x + astOrbit * Math.cos(angle);
+                    asteroid.y = center.y + astOrbit * Math.sin(angle);
+                    asteroid.vx = -astVel * Math.sin(angle);
+                    asteroid.vy = astVel * Math.cos(angle);
+                    asteroid.isIcy = false; // Inner disk is rocky
+                    bodies.push(asteroid);
+                }
+                numAsteroids += numInnerBodies;
+            }
+
             simStats.asteroidsRemaining = numAsteroids;
             buildDashboard();
             updateDashboard();
@@ -260,7 +275,23 @@
 
         // --- UPDATE LOGIC ---
         function update() {
-            // N-Body calculations
+            simStats.timeSinceImpact += 1;
+
+            const jupiter = bodies.find(b => b.name === 'Jupiter');
+            if (jupiter && grandTackState !== 'off' && grandTackState !== 'done') {
+                const distToSun = Math.sqrt((jupiter.x - center.x)**2 + (jupiter.y - center.y)**2) / scale;
+                if (grandTackState === 'inward') {
+                    jupiter.vx *= 0.999;
+                    jupiter.vy *= 0.999;
+                    if (distToSun <= 1.8) grandTackState = 'outward';
+                } else if (grandTackState === 'outward') {
+                    const angle = Math.atan2(jupiter.y - center.y, jupiter.x - center.x);
+                    jupiter.vx += Math.cos(angle + Math.PI / 2) * 0.005;
+                    jupiter.vy += Math.sin(angle + Math.PI / 2) * 0.005;
+                    if (distToSun >= 5.2) grandTackState = 'done';
+                }
+            }
+
             for (let i = 0; i < bodies.length; i++) {
                 for (let j = i + 1; j < bodies.length; j++) {
                     if(bodies[i].isAlive && bodies[j].isAlive) {
@@ -270,67 +301,60 @@
                 }
             }
             
-            // Update positions (except for the stationary sun)
-            for (let i = 1; i < bodies.length; i++) {
-                if(bodies[i].isAlive) bodies[i].updatePosition();
-            }
+            for (let i = 1; i < bodies.length; i++) { if(bodies[i].isAlive) bodies[i].updatePosition(); }
 
-            // Collision, Ejection, and Hot Jupiter Checks
-            const massiveBodies = bodies.filter(b => b.type !== 'asteroid' && b.isAlive);
+            const massiveBodies = bodies.filter(b => b.type === 'planet' && b.isAlive);
             const asteroids = bodies.filter(b => b.type === 'asteroid');
-            const jupiter = bodies.find(b => b.name === 'Jupiter');
 
             for (const a of asteroids) {
                 if (!a.isAlive) continue;
-
-                // Check collisions with massive bodies
                 for (const p of massiveBodies) {
                     const dist = Math.sqrt((a.x - p.x)**2 + (a.y - p.y)**2);
                     if (dist < p.collisionRadius) {
                         a.isAlive = false;
-                        if (p.name === 'Earth' && a.isIcy) {
-                            simStats.earth++; // Special case for water delivery
-                        } else {
-                            simStats[p.name.toLowerCase()]++;
+                        const pName = p.name.toLowerCase();
+                        if (simStats.hasOwnProperty(pName)) {
+                             if (pName === 'earth') simStats.timeSinceImpact = 0;
+                             simStats[pName]++;
                         }
-                        break; // Asteroid is gone, move to next one
+                        break;
                     }
                 }
                 if (!a.isAlive) continue;
-
-                // Check for ejection
                 const distToSun = Math.sqrt((a.x - center.x)**2 + (a.y - center.y)**2);
-                const speed = Math.sqrt(a.vx**2 + a.vy**2);
-                const escapeVelocity = Math.sqrt(2 * G * bodies[0].mass / distToSun);
-                if (speed > escapeVelocity) {
+                if (Math.sqrt(a.vx**2 + a.vy**2) > Math.sqrt(2 * G * bodies[0].mass / distToSun)) {
                     a.isAlive = false; simStats.ejected++; continue;
                 }
-
-                // Hot Jupiter effect
-                if (hotJupiterToggle.checked && jupiter) {
-                    const distToJupiter = Math.sqrt((a.x - jupiter.x)**2 + (a.y - jupiter.y)**2);
-                    if (distToJupiter < JUPITER_LOCAL_SNOW_LINE_AU * scale) {
-                        a.isIcy = false;
-                    }
-                }
             }
+
+            const earth = bodies.find(b => b.name === 'Earth');
+            if (earth && earth.isAlive) {
+                const earthDistAU = Math.sqrt((earth.x - center.x)**2 + (earth.y - center.y)**2) / scale;
+                if (earthDistAU < HABITABLE_ZONE.inner) earth.color = '#f87171';
+                else if (earthDistAU > HABITABLE_ZONE.outer) earth.color = '#60a5fa';
+                else earth.color = earth.originalColor;
+            }
+
             simStats.asteroidsRemaining = asteroids.filter(a => a.isAlive).length;
             updateDashboard();
         }
 
         function buildDashboard() {
-            dashboardContent.innerHTML = ''; // Clear old dashboard
-            const statOrder = ['earth', 'mars', 'venus', 'mercury', 'jupiter', 'sun', 'ejected', 'asteroidsRemaining'];
+            dashboardContent.innerHTML = '';
+            const isGrandTack = grandTackState !== 'off';
             const statLabels = {
-                earth: '💧 Water to Earth:', mars: '💥 Hits on Mars:', venus: '💥 Hits on Venus:',
+                timeSinceImpact: '☮️ Years Since Last Impact:', earth: '💧 Hits on Earth:', mars: '💥 Hits on Mars:', venus: '💥 Hits on Venus:',
                 mercury: '💥 Hits on Mercury:', jupiter: '💥 Absorbed by Jupiter:', sun: '💥 Absorbed by Sun:',
-                ejected: '🚀 Asteroids Ejected:', asteroidsRemaining: ' Surviving:'
+                ejected: '🚀 Asteroids Ejected:', asteroidsRemaining: ' Surviving Bodies:'
             };
-            for (const key of statOrder) {
-                if (simStats.hasOwnProperty(key)) {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<p>${statLabels[key]}</p><p id="${key}Count" class="text-2xl font-bold text-white">0</p>`;
-                    dashboardContent.appendChild(div);
+            
+            for (const key in statLabels) {
+                const planetExists = bodies.some(b => b.name.toLowerCase() === key);
+                if (planetExists || ['ejected', 'asteroidsRemaining', 'timeSinceImpact'].includes(key)) {
+                     if (isGrandTack && ['earth', 'mars', 'venus', 'mercury', 'timeSinceImpact'].includes(key)) continue;
+                     const div = document.createElement('div');
+                     div.innerHTML = `<p>${statLabels[key]}</p><p id="${key}Count" class="text-2xl font-bold text-white">0</p>`;
+                     dashboardContent.appendChild(div);
                 }
             }
         }
@@ -338,48 +362,17 @@
         function updateDashboard() {
             for (const key in simStats) {
                 const el = document.getElementById(`${key}Count`);
-                if (el) el.textContent = simStats[key];
+                if (el) el.textContent = Math.round(simStats[key]).toLocaleString();
             }
         }
 
-        // --- DRAWING LOGIC ---
         function draw() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            bodies.forEach(b => { if(b.isAlive) b.draw(); });
-        }
-
-        // --- MAIN LOOP ---
-        let animationFrameId;
-        function animate() {
-            update();
-            draw();
-            animationFrameId = requestAnimationFrame(animate);
-        }
-
-        // --- EVENT LISTENERS ---
-        startButton.addEventListener('click', () => {
-            landingPage.classList.add('hidden');
-            simulationContainer.classList.remove('hidden');
-            init();
-            animate();
-        });
-
-        function resetSimulation() {
-            cancelAnimationFrame(animationFrameId);
-            init();
-            animate();
-        }
-        
-        Object.values(planetToggles).forEach(t => t.addEventListener('change', resetSimulation));
-        hotJupiterToggle.addEventListener('change', resetSimulation);
-        jupiterOrbitSlider.addEventListener('input', e => { jupiterOrbitLabel.textContent = parseFloat(e.target.value).toFixed(1); });
-        jupiterOrbitSlider.addEventListener('change', resetSimulation);
-        asteroidSlider.addEventListener('input', e => { asteroidLabel.textContent = e.target.value; });
-        asteroidSlider.addEventListener('change', resetSimulation);
-        window.addEventListener('resize', resetSimulation);
-
-    </script>
-</body>
-</html>
-
+            if (!bodies.find(b => b.name === 'Earth')) {
+                ctx.beginPath();
+                const innerRadius = HABITABLE_ZONE.inner * scale;
+                const outerRadius = HABITABLE_ZONE.outer * scale;
+                ctx.arc(center.x, center.y, innerRadius, 0, 2 * Math.PI, true);
+                ctx.arc(center.x, center.y, outerRadius, 0, 2 * Math.PI, false);
+                ctx.fillSt
