@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hot Jupiter Simulation</title>
+    <title>V3: Fate of the Asteroids</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -17,276 +17,342 @@
             border-radius: 0.5rem; /* rounded-lg */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .control-panel {
+        .control-panel, .dashboard {
             background-color: #1f2937; /* Tailwind gray-800 */
             border: 1px solid #374151; /* Tailwind gray-700 */
         }
-        /* Custom styles for the range slider */
         input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #4b5563; /* Tailwind gray-600 */
-            border-radius: 5px;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity .2s;
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 8px; background: #4b5563;
+            border-radius: 5px; outline: none; opacity: 0.7; transition: opacity .2s;
         }
-        input[type="range"]:hover {
-            opacity: 1;
-        }
+        input[type="range"]:hover { opacity: 1; }
         input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #f97316; /* Tailwind orange-500 */
-            border-radius: 50%;
-            cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; background: #f97316;
+            border-radius: 50%; cursor: pointer;
         }
         input[type="range"]::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: #f97316; /* Tailwind orange-500 */
-            border-radius: 50%;
-            cursor: pointer;
+            width: 20px; height: 20px; background: #f97316;
+            border-radius: 50%; cursor: pointer;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="text-center mb-4">
-        <h1 class="text-2xl md:text-3xl font-bold text-white">Hot Jupiter Simulation</h1>
-        <p class="text-gray-400 mt-1">How a hotter Jupiter could change the Solar System.</p>
+    <!-- Landing Page -->
+    <div id="landingPage" class="text-center max-w-2xl">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Solar System Evolution Simulator</h1>
+        <div class="text-left text-gray-300 space-y-4 p-6 rounded-lg bg-gray-800 border border-gray-700">
+            <p>This is an <span class="font-bold text-yellow-400">N-body physics simulation</span> that models how our solar system might have evolved differently based on the properties of Jupiter.</p>
+            <h2 class="text-xl font-semibold text-white pt-2">New in V3: Track the Outcomes</h2>
+             <ul class="list-disc list-inside space-y-2">
+                <li><span class="font-semibold text-white">Collision Detection:</span> The simulation now detects when asteroids hit a planet or the Sun.</li>
+                <li><span class="font-semibold text-white">"Fate of the Asteroids" Dashboard:</span> A new panel tracks the results of your simulation in real-time, counting how many asteroids deliver water to Earth, get absorbed by giants, or are ejected from the system entirely.</li>
+            </ul>
+            <p class="pt-4 font-semibold">Run different scenarios to see which one is best for creating a habitable, water-rich Earth!</p>
+        </div>
+        <button id="startButton" class="mt-8 px-8 py-3 bg-orange-600 text-white font-bold text-lg rounded-lg hover:bg-orange-700 transition-colors duration-300">Start Simulation</button>
     </div>
 
-    <div class="control-panel p-4 rounded-lg shadow-lg mb-4 w-full max-w-md">
-        <div class="flex items-center justify-between">
-            <label for="hotJupiterToggle" class="text-lg font-semibold text-white cursor-pointer select-none">
-                Activate "Hot Jupiter" Effect 🔥
-            </label>
-            <input type="checkbox" id="hotJupiterToggle" class="h-6 w-6 rounded text-orange-500 bg-gray-700 border-gray-600 focus:ring-orange-600 focus:ring-2 cursor-pointer">
+    <!-- Simulation Elements (Initially Hidden) -->
+    <div id="simulationContainer" class="hidden w-full flex flex-col items-center">
+        <div class="text-center mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-white">V3: Fate of the Asteroids</h1>
         </div>
-        <div class="mt-4">
-            <label for="jupiterOrbitSlider" class="text-lg font-semibold text-white">Jupiter's Orbit: <span id="jupiterOrbitLabel">5.2</span> AU</label>
-            <input type="range" id="jupiterOrbitSlider" min="3.0" max="7.0" value="5.2" step="0.1" class="w-full mt-2">
-        </div>
-    </div>
-    
-    <div class="w-full max-w-2xl aspect-square">
-        <canvas id="solarSystemCanvas" class="w-full h-full"></canvas>
-    </div>
 
-    <div class="mt-4 text-center text-gray-400 text-sm max-w-2xl">
-        <p><span class="text-cyan-400 font-semibold">Cyan dots</span> are icy asteroids. <span class="text-yellow-700 font-semibold">Brown dots</span> are rocky.</p>
-        <p>The <span class="text-blue-400">blue circle</span> is the Sun's snow line. When active, the <span class="text-orange-500">orange circle</span> is Jupiter's local heat zone.</p>
+        <div class="w-full max-w-4xl flex flex-col md:flex-row gap-4">
+            <!-- Left Column: Controls and Canvas -->
+            <div class="flex-grow flex flex-col items-center">
+                <div class="control-panel p-4 rounded-lg shadow-lg mb-4 w-full max-w-md">
+                    <div class="flex items-center justify-between">
+                        <label for="hotJupiterToggle" class="text-lg font-semibold text-white cursor-pointer select-none">
+                            "Hot Jupiter" Effect 🔥
+                        </label>
+                        <input type="checkbox" id="hotJupiterToggle" class="h-6 w-6 rounded text-orange-500 bg-gray-700 border-gray-600 focus:ring-orange-600 focus:ring-2 cursor-pointer">
+                    </div>
+                    <div class="mt-4">
+                        <label for="jupiterOrbitSlider" class="text-lg font-semibold text-white">Jupiter's Initial Orbit: <span id="jupiterOrbitLabel">5.2</span> AU</label>
+                        <input type="range" id="jupiterOrbitSlider" min="3.0" max="7.0" value="5.2" step="0.1" class="w-full mt-2">
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-2xl aspect-square">
+                    <canvas id="solarSystemCanvas" class="w-full h-full"></canvas>
+                </div>
+            </div>
+
+            <!-- Right Column: Dashboard -->
+            <div class="dashboard p-4 rounded-lg shadow-lg w-full md:w-64">
+                <h2 class="text-xl font-bold text-white border-b border-gray-600 pb-2 mb-3">System Report</h2>
+                <div class="space-y-3 text-lg">
+                    <div>
+                        <p class="text-blue-300">💧 Water Delivered to Earth:</p>
+                        <p id="waterDeliveredCount" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-red-400">💥 Absorbed by Sun:</p>
+                        <p id="sunCollisionCount" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-orange-400">💥 Absorbed by Jupiter:</p>
+                        <p id="jupiterCollisionCount" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-purple-400">🚀 Asteroids Ejected:</p>
+                        <p id="ejectedCount" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400"> surviving:</p>
+                        <p id="asteroidsRemainingCount" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
-        // --- SETUP ---
+        // --- DOM ELEMENTS ---
+        const landingPage = document.getElementById('landingPage');
+        const startButton = document.getElementById('startButton');
+        const simulationContainer = document.getElementById('simulationContainer');
         const canvas = document.getElementById('solarSystemCanvas');
         const ctx = canvas.getContext('2d');
         const hotJupiterToggle = document.getElementById('hotJupiterToggle');
         const jupiterOrbitSlider = document.getElementById('jupiterOrbitSlider');
         const jupiterOrbitLabel = document.getElementById('jupiterOrbitLabel');
+        const waterDeliveredCountEl = document.getElementById('waterDeliveredCount');
+        const sunCollisionCountEl = document.getElementById('sunCollisionCount');
+        const jupiterCollisionCountEl = document.getElementById('jupiterCollisionCount');
+        const ejectedCountEl = document.getElementById('ejectedCount');
+        const asteroidsRemainingCountEl = document.getElementById('asteroidsRemainingCount');
 
-        // Set canvas resolution based on its container size
-        function resizeCanvas() {
+        // --- PHYSICS CONSTANTS AND SCALING ---
+        const G = 60; 
+        const TIMESTEP = 0.01;
+        const JUPITER_LOCAL_SNOW_LINE_AU = 0.8;
+        const SUN_SNOW_LINE_AU = 2.7;
+        const NUM_ASTEROIDS = 700;
+
+        let bodies = [];
+        let isJupiterHot = false;
+        let center = { x: 0, y: 0 };
+        let scale = 1; // Pixels per AU
+
+        // --- SIMULATION STATE ---
+        let simStats = {};
+
+        // --- BODY CLASS ---
+        class Body {
+            constructor(name, mass, radius, color, x, y, vx, vy) {
+                this.name = name; this.mass = mass; this.radius = radius;
+                this.color = color; this.x = x; this.y = y;
+                this.vx = vx; this.vy = vy; this.ax = 0; this.ay = 0;
+                this.type = (this.name === 'asteroid') ? 'rocky' : null;
+                this.isAlive = true;
+                // Use a larger radius for collision detection than for drawing
+                this.collisionRadius = radius * 1.5; 
+            }
+
+            addForce(otherBody) {
+                const dx = otherBody.x - this.x;
+                const dy = otherBody.y - this.y;
+                let distSq = dx * dx + dy * dy;
+                if (distSq < 100) distSq = 100;
+                const dist = Math.sqrt(distSq);
+                const force = G * this.mass * otherBody.mass / distSq;
+                this.ax += force * (dx / dist) / this.mass;
+                this.ay += force * (dy / dist) / this.mass;
+            }
+            
+            updatePosition() {
+                this.vx += this.ax * TIMESTEP;
+                this.vy += this.ay * TIMESTEP;
+                this.x += this.vx * TIMESTEP;
+                this.y += this.vy * TIMESTEP;
+                this.ax = 0; this.ay = 0;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                if (this.name === 'asteroid') {
+                    ctx.fillStyle = (this.type === 'icy') ? '#22d3ee' : '#a16207';
+                    ctx.fillRect(this.x - 1, this.y - 1, 2, 2);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // --- INITIALIZATION ---
+        function init() {
             const container = canvas.parentElement;
             const size = Math.min(container.clientWidth, container.clientHeight);
             if (canvas.width !== size || canvas.height !== size) {
                 canvas.width = size;
                 canvas.height = size;
-                // Re-initialize simulation on resize to adjust scales
-                init(); 
             }
-        }
-
-        // --- PHYSICAL PARAMETERS (SIMPLIFIED) ---
-        const SUN_SNOW_LINE_AU = 2.7; // Standard frost line
-        const JUPITER_LOCAL_SNOW_LINE_AU = 0.8; // Local heat effect
-        const NUM_ASTEROIDS = 1500;
-
-        let isJupiterHot = false;
-        let asteroids = [];
-        let center = { x: 0, y: 0 };
-        let auToPixels = 0;
-
-        // --- OBJECT DEFINITIONS ---
-        const Sun = {
-            radius: 10,
-            color: 'gold'
-        };
-
-        const Earth = {
-            name: 'Earth',
-            orbitRadiusAU: 1,
-            angle: Math.random() * 2 * Math.PI,
-            speed: 0.01,
-            radius: 4,
-            color: '#3b82f6' // Tailwind blue-500
-        };
-
-        const Jupiter = {
-            name: 'Jupiter',
-            // orbitRadiusAU is now controlled by the slider
-            angle: Math.random() * 2 * Math.PI,
-            speed: 0.002, // We'll keep speed constant for simplicity
-            radius: 8,
-            color: '#f97316' // Tailwind orange-500
-        };
-        
-        // --- INITIALIZATION ---
-        function init() {
             center = { x: canvas.width / 2, y: canvas.height / 2 };
-            // Adjust scale to keep the furthest possible orbit visible
-            auToPixels = canvas.width / (2 * parseFloat(jupiterOrbitSlider.max)); 
-            Jupiter.orbitRadiusAU = parseFloat(jupiterOrbitSlider.value);
+            scale = canvas.width / (parseFloat(jupiterOrbitSlider.max) * 2.2);
+            
+            isJupiterHot = hotJupiterToggle.checked;
+            bodies = [];
 
-            // Create asteroids in a belt between Mars and Jupiter
-            asteroids = [];
+            // Reset stats
+            simStats = { waterDelivered: 0, sunCollisions: 0, jupiterCollisions: 0, ejected: 0, asteroidsRemaining: NUM_ASTEROIDS };
+
+            const sun = new Body('Sun', 1000, 10, 'gold', center.x, center.y, 0, 0);
+            const earth = new Body('Earth', 1, 5, '#3b82f6', 0, 0, 0, 0);
+            const jupiter = new Body('Jupiter', 318, 12, '#f97316', 0, 0, 0, 0);
+            
+            // Set planet positions and velocities
+            const earthOrbit = 1.0 * scale;
+            const earthVel = Math.sqrt(G * sun.mass / earthOrbit);
+            earth.x = center.x + earthOrbit; earth.y = center.y; earth.vy = earthVel;
+
+            const jupiterOrbit = parseFloat(jupiterOrbitSlider.value) * scale;
+            const jupiterVel = Math.sqrt(G * sun.mass / jupiterOrbit);
+            jupiter.x = center.x + jupiterOrbit; jupiter.y = center.y; jupiter.vy = jupiterVel;
+            
+            bodies = [sun, earth, jupiter];
+
             for (let i = 0; i < NUM_ASTEROIDS; i++) {
-                const orbitRadiusAU = 2.0 + Math.random() * 2.0; // Asteroid belt from 2.0 to 4.0 AU
-                asteroids.push({
-                    orbitRadiusAU: orbitRadiusAU,
-                    angle: Math.random() * 2 * Math.PI,
-                    speed: 0.003 + Math.random() * 0.002,
-                    // Type is initially determined by the Sun's snow line
-                    type: (orbitRadiusAU > SUN_SNOW_LINE_AU) ? 'icy' : 'rocky'
-                });
+                const orbitAU = 2.0 + Math.random() * 2.0;
+                const orbit = orbitAU * scale;
+                const angle = Math.random() * 2 * Math.PI;
+                const vel = Math.sqrt(G * sun.mass / orbit) * (1 + (Math.random() - 0.5) * 0.1);
+                const asteroid = new Body('asteroid', 0.0001, 1, 'gray', 
+                    center.x + orbit * Math.cos(angle), center.y + orbit * Math.sin(angle),
+                    -vel * Math.sin(angle), vel * Math.cos(angle)
+                );
+                asteroid.type = (orbitAU > SUN_SNOW_LINE_AU) ? 'icy' : 'rocky';
+                bodies.push(asteroid);
             }
+            updateDashboard();
         }
 
         // --- UPDATE LOGIC ---
         function update() {
-            // Update planet positions
-            Earth.angle += Earth.speed;
-            Jupiter.angle += Jupiter.speed;
-
-            // Get Jupiter's current position in pixels
-            const jupiterX = center.x + Jupiter.orbitRadiusAU * auToPixels * Math.cos(Jupiter.angle);
-            const jupiterY = center.y + Jupiter.orbitRadiusAU * auToPixels * Math.sin(Jupiter.angle);
-
-            // Update asteroid positions and composition
-            asteroids.forEach(a => {
-                a.angle += a.speed;
-
-                // If Jupiter is hot, check if the asteroid is within its local snow line
-                if (isJupiterHot) {
-                    const asteroidX = center.x + a.orbitRadiusAU * auToPixels * Math.cos(a.angle);
-                    const asteroidY = center.y + a.orbitRadiusAU * auToPixels * Math.sin(a.angle);
-                    
-                    const dx = asteroidX - jupiterX;
-                    const dy = asteroidY - jupiterY;
-                    const distToJupiter = Math.sqrt(dx * dx + dy * dy);
-
-                    // If it's inside Jupiter's heat bubble, it becomes rocky (water ice sublimates)
-                    if (distToJupiter < JUPITER_LOCAL_SNOW_LINE_AU * auToPixels) {
-                        a.type = 'rocky';
+            // N-Body calculations
+            for (let i = 0; i < bodies.length; i++) {
+                for (let j = i + 1; j < bodies.length; j++) {
+                    if(bodies[i].isAlive && bodies[j].isAlive) {
+                        bodies[i].addForce(bodies[j]);
+                        bodies[j].addForce(bodies[i]);
                     }
                 }
-            });
+            }
+            
+            // Update positions (except for the stationary sun)
+            for (let i = 1; i < bodies.length; i++) {
+                if(bodies[i].isAlive) bodies[i].updatePosition();
+            }
+
+            // Collision, Ejection, and Hot Jupiter Checks
+            const sun = bodies[0];
+            const earth = bodies[1];
+            const jupiter = bodies[2];
+
+            for (let i = 3; i < bodies.length; i++) {
+                const a = bodies[i];
+                if (!a.isAlive) continue;
+
+                // Check collisions
+                const distToSun = Math.sqrt((a.x - sun.x)**2 + (a.y - sun.y)**2);
+                if (distToSun < sun.collisionRadius) {
+                    a.isAlive = false; simStats.sunCollisions++; continue;
+                }
+                const distToEarth = Math.sqrt((a.x - earth.x)**2 + (a.y - earth.y)**2);
+                if (distToEarth < earth.collisionRadius) {
+                    a.isAlive = false;
+                    if (a.type === 'icy') simStats.waterDelivered++;
+                    else simStats.sunCollisions++; // Treat rocky impacts as just adding mass
+                    continue;
+                }
+                const distToJupiter = Math.sqrt((a.x - jupiter.x)**2 + (a.y - jupiter.y)**2);
+                if (distToJupiter < jupiter.collisionRadius) {
+                    a.isAlive = false; simStats.jupiterCollisions++; continue;
+                }
+
+                // Check for ejection
+                const speed = Math.sqrt(a.vx**2 + a.vy**2);
+                const escapeVelocity = Math.sqrt(2 * G * sun.mass / distToSun);
+                if (speed > escapeVelocity) {
+                    a.isAlive = false; simStats.ejected++; continue;
+                }
+
+                // Hot Jupiter effect
+                if (isJupiterHot && distToJupiter < JUPITER_LOCAL_SNOW_LINE_AU * scale) {
+                    a.type = 'rocky';
+                }
+            }
+            simStats.asteroidsRemaining = bodies.filter(b => b.name === 'asteroid' && b.isAlive).length;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            waterDeliveredCountEl.textContent = simStats.waterDelivered;
+            sunCollisionCountEl.textContent = simStats.sunCollisions;
+            jupiterCollisionCountEl.textContent = simStats.jupiterCollisions;
+            ejectedCountEl.textContent = simStats.ejected;
+            asteroidsRemainingCountEl.textContent = simStats.asteroidsRemaining;
         }
 
         // --- DRAWING LOGIC ---
         function draw() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            bodies.forEach(b => { if(b.isAlive) b.draw(); });
 
-            // Draw Sun's Snow Line
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; // Tailwind blue-500 with opacity
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 10]);
-            ctx.arc(center.x, center.y, SUN_SNOW_LINE_AU * auToPixels, 0, 2 * Math.PI);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Draw Sun
-            ctx.fillStyle = Sun.color;
-            ctx.beginPath();
-            ctx.arc(center.x, center.y, Sun.radius, 0, 2 * Math.PI);
-            ctx.fill();
-
-            // Draw Planets and their orbits
-            [Earth, Jupiter].forEach(p => {
-                const x = center.x + p.orbitRadiusAU * auToPixels * Math.cos(p.angle);
-                const y = center.y + p.orbitRadiusAU * auToPixels * Math.sin(p.angle);
-                
-                // Orbit path
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.lineWidth = 1;
-                ctx.arc(center.x, center.y, p.orbitRadiusAU * auToPixels, 0, 2 * Math.PI);
-                ctx.stroke();
-
-                // Planet
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(x, y, p.radius, 0, 2 * Math.PI);
-                ctx.fill();
-
-                // Draw Jupiter's local snow line if it's hot
-                if (p.name === 'Jupiter' && isJupiterHot) {
+            if (isJupiterHot) {
+                const jupiter = bodies[2];
+                if (jupiter && jupiter.isAlive) {
                     ctx.beginPath();
-                    ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)'; // Tailwind orange-500 with opacity
+                    ctx.strokeStyle = 'rgba(249, 115, 22, 0.3)';
                     ctx.setLineDash([5, 5]);
-                    ctx.arc(x, y, JUPITER_LOCAL_SNOW_LINE_AU * auToPixels, 0, 2 * Math.PI);
+                    ctx.arc(jupiter.x, jupiter.y, JUPITER_LOCAL_SNOW_LINE_AU * scale, 0, 2 * Math.PI);
                     ctx.stroke();
                     ctx.setLineDash([]);
                 }
-            });
-            
-            // Draw Asteroids
-            asteroids.forEach(a => {
-                const x = center.x + a.orbitRadiusAU * auToPixels * Math.cos(a.angle);
-                const y = center.y + a.orbitRadiusAU * auToPixels * Math.sin(a.angle);
-                
-                ctx.fillStyle = (a.type === 'icy') ? '#22d3ee' : '#a16207'; // Tailwind cyan-400 and yellow-700
-                ctx.fillRect(x, y, 2, 2); // Use rectangles for performance
-            });
+            }
         }
 
         // --- MAIN LOOP ---
+        let animationFrameId;
         function animate() {
-            resizeCanvas(); // Check for resize on each frame
             update();
             draw();
-            requestAnimationFrame(animate);
+            animationFrameId = requestAnimationFrame(animate);
         }
 
         // --- EVENT LISTENERS ---
-        hotJupiterToggle.addEventListener('change', (e) => {
-            isJupiterHot = e.target.checked;
-            // Re-initialize to reset the asteroid types when the checkbox is toggled
+        function startSimulation() {
+            landingPage.classList.add('hidden');
+            simulationContainer.classList.remove('hidden');
             init();
-        });
+            animate();
+        }
+        startButton.addEventListener('click', startSimulation);
 
-        jupiterOrbitSlider.addEventListener('input', (e) => {
-            const newOrbit = parseFloat(e.target.value).toFixed(1);
-            jupiterOrbitLabel.textContent = newOrbit;
-            // No need to call init() on every input event for a smoother experience.
-            // We'll just update the value directly.
-            Jupiter.orbitRadiusAU = parseFloat(newOrbit);
-        });
-        
-        jupiterOrbitSlider.addEventListener('change', (e) => {
-            // Re-initialize the simulation when the user finishes sliding
-            // to reset asteroid compositions based on the new orbit.
+        function resetSimulation() {
+            cancelAnimationFrame(animationFrameId);
             init();
+            animate();
+        }
+        hotJupiterToggle.addEventListener('change', resetSimulation);
+        jupiterOrbitSlider.addEventListener('input', e => {
+            jupiterOrbitLabel.textContent = parseFloat(e.target.value).toFixed(1);
         });
-
-
-        // Add a listener for window resize events
-        window.addEventListener('resize', resizeCanvas);
-
-        // Start the simulation
-        init();
-        animate();
+        jupiterOrbitSlider.addEventListener('change', resetSimulation);
+        window.addEventListener('resize', resetSimulation);
 
     </script>
 </body>
 </html>
+
