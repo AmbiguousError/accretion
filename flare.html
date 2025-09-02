@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Solar CME Animation</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -12,48 +14,50 @@
             color: white;
             font-family: 'Inter', sans-serif;
         }
+        /* Make canvas fill the background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
         #info-container {
             position: absolute;
-            top: 20px;
+            top: 1rem;
             left: 50%;
             transform: translateX(-50%);
-            text-align: center;
             z-index: 100;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 15px;
-            border-radius: 12px;
-            max-width: 90%;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
+            width: 95%;
+            max-width: 600px;
         }
-        h1 {
-            margin: 0;
-            font-size: 1.5em;
+        .label {
+            color: #fff;
+            font-family: sans-serif;
+            padding: 2px 5px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+            font-size: 14px;
+            text-shadow: 0 0 5px #000;
         }
-        .controls-row {
-            display: flex;
-            gap: 20px;
-            align-items: center;
+        /* Styles for Intro Modal */
+        #introModal {
+            color: #333;
         }
-        #cme-scale-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        #introModal .modal-header, #introModal .modal-footer {
+            border-color: #dee2e6;
         }
-        label {
+        #introModal h5 {
             font-weight: bold;
         }
-        select {
-            padding: 5px 8px;
-            border-radius: 5px;
-            border: 1px solid #555;
-            background-color: #333;
-            color: white;
-            font-family: 'Inter', sans-serif;
+        #introModal ul {
+            padding-left: 20px;
         }
-        button {
+        #introModal li {
+            margin-bottom: 0.5rem;
+        }
+        .btn-launch {
             padding: 12px 24px;
             cursor: pointer;
             background: linear-gradient(45deg, #ff4500, #ff8c00);
@@ -67,45 +71,77 @@
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 15px rgba(255, 100, 0, 0.4);
         }
-        button:hover {
+        .btn-launch:hover {
             transform: scale(1.05);
             box-shadow: 0 6px 20px rgba(255, 100, 0, 0.6);
-        }
-        canvas {
-            display: block;
-        }
-        /* Styles for the planet labels */
-        .label {
-            color: #fff;
-            font-family: sans-serif;
-            padding: 2px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 3px;
-            font-size: 14px;
-            text-shadow: 0 0 5px #000;
+            color: white;
         }
     </style>
-    <!-- Import Google Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="info-container">
-        <h1>Solar Coronal Mass Ejection</h1>
-        <div class="controls-row">
-            <button id="cmeButton">Launch CME</button>
-            <div id="cme-scale-container">
-                <label for="cmeScale">Flare Class:</label>
-                <select id="cmeScale">
-                    <option value="3000,2.0,0.2">C-Class</option>
-                    <option value="15000,3.5,0.4" selected>M-Class</option>
-                    <option value="50000,5.0,0.6">X-Class</option>
-                </select>
+    <!-- Intro Modal -->
+    <div class="modal fade" id="introModal" tabindex="-1" aria-labelledby="introModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="introModalLabel">Welcome to the Solar CME Simulator</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>This is an interactive 3D visualization of a <strong>Coronal Mass Ejection (CME)</strong>, a massive burst of plasma from the Sun.</p>
+            <h6>How to Use:</h6>
+            <ul>
+                <li><strong>Explore:</strong> Use your mouse or touch to drag, pan, and zoom to view the inner solar system.</li>
+                <li><strong>Select Flare Class:</strong> Choose the intensity of the solar flare (C, M, or X-Class).</li>
+                <li><strong>Launch CME:</strong> Click the "Launch CME" button to trigger an eruption from a random hotspot on the Sun.</li>
+                <li><strong>Observe:</strong> Watch as the CME travels through space. If it hits Earth, it may trigger an aurora effect.</li>
+            </ul>
+            <h6>Limitations of this Simulation:</h6>
+            <p>This is an educational tool, not a scientifically precise model. Key simplifications include:</p>
+            <ul>
+                <li><strong>Scale & Distance:</strong> Planet sizes, distances, and CME particle sizes are not to scale.</li>
+                <li><strong>Speed:</strong> Orbital speeds and CME travel time are greatly accelerated for viewing purposes.</li>
+                <li><strong>Visuals:</strong> The CME, aurora, and planet textures are artistic representations.</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Start Simulation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="info-container" class="p-3 bg-dark bg-opacity-50 rounded-3">
+        <div class="container-fluid">
+            <div class="row text-center gy-3 align-items-center">
+                <div class="col-12">
+                    <h1 class="mb-0 fs-4">Solar Coronal Mass Ejection</h1>
+                </div>
+                <div class="col-md-6">
+                     <button id="cmeButton" class="btn-launch w-100">Launch CME</button>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <label class="input-group-text" for="cmeScale">Flare Class:</label>
+                        <select class="form-select" id="cmeScale">
+                            <option value="3000,2.0,0.2">C-Class</option>
+                            <option value="15000,3.5,0.4" selected>M-Class</option>
+                            <option value="50000,5.0,0.6">X-Class</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <div id="bg-canvas"></div>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Import map for Three.js modules -->
     <script type="importmap">
         {
@@ -115,7 +151,6 @@
             }
         }
     </script>
-
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -126,27 +161,28 @@
         let cmeParticles = null;
         let cmeActive = false;
         let hotspotMesh = null;
-        
         const cmeVelocities = [];
 
-        // Initialize the 3D scene
         function init() {
+            const canvasContainer = document.getElementById('bg-canvas');
+
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera = new THREE.PerspectiveCamera(75, canvasContainer.offsetWidth / canvasContainer.offsetHeight, 0.1, 2000);
             camera.position.set(0, 150, 400);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
+            canvasContainer.appendChild(renderer.domElement);
 
             labelRenderer = new CSS2DRenderer();
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
             labelRenderer.domElement.style.position = 'absolute';
             labelRenderer.domElement.style.top = '0px';
-            document.body.appendChild(labelRenderer.domElement);
+            labelRenderer.domElement.style.pointerEvents = 'none'; // Allow controls to work through the label renderer
+            canvasContainer.appendChild(labelRenderer.domElement);
 
-            controls = new OrbitControls(camera, labelRenderer.domElement);
+            controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.minDistance = 100;
@@ -159,9 +195,12 @@
 
             document.getElementById('cmeButton').addEventListener('click', launchCME);
             window.addEventListener('resize', onWindowResize);
+            
+            // Show the intro modal on load
+            const introModal = new bootstrap.Modal(document.getElementById('introModal'));
+            introModal.show();
         }
 
-        // Create the sun, planets, and their orbits
         function createSolarSystem() {
             const sunGeometry = new THREE.SphereGeometry(50, 64, 64);
             const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdd00, map: createSunTexture() });
@@ -173,10 +212,7 @@
             const starGeometry = new THREE.BufferGeometry();
             const starVertices = [];
             for (let i = 0; i < 10000; i++) {
-                const x = THREE.MathUtils.randFloatSpread(2000);
-                const y = THREE.MathUtils.randFloatSpread(2000);
-                const z = THREE.MathUtils.randFloatSpread(2000);
-                starVertices.push(x, y, z);
+                starVertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
             }
             starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
             const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.7 });
@@ -191,18 +227,14 @@
 
             planetsData.forEach(p_data => {
                 const geometry = new THREE.SphereGeometry(p_data.size, 32, 32);
-                const material = new THREE.MeshStandardMaterial({ 
-                    map: createPlanetTexture(p_data),
-                    roughness: 0.9 
-                });
+                const material = new THREE.MeshStandardMaterial({ map: createPlanetTexture(p_data), roughness: 0.9 });
                 const planetMesh = new THREE.Mesh(geometry, material);
-                p_data.mesh = planetMesh; // Store mesh for easy access
+                p_data.mesh = planetMesh;
                 planetMesh.position.x = p_data.distance;
                 
                 const pivot = new THREE.Object3D();
                 pivot.add(planetMesh);
                 scene.add(pivot);
-                
                 p_data.pivot = pivot;
                 planets.push(p_data);
 
@@ -222,13 +254,9 @@
                 if (p_data.name === 'Earth') {
                     const moonSize = p_data.size * 0.27;
                     const moonGeometry = new THREE.SphereGeometry(moonSize, 32, 32);
-                    const moonMaterial = new THREE.MeshStandardMaterial({ 
-                        map: createPlanetTexture({name: 'Moon'}),
-                        roughness: 0.9
-                    });
+                    const moonMaterial = new THREE.MeshStandardMaterial({ map: createPlanetTexture({name: 'Moon'}), roughness: 0.9 });
                     const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
                     moonMesh.position.x = p_data.size + 10;
-
                     const moonPivot = new THREE.Object3D();
                     moonPivot.add(moonMesh);
                     planetMesh.add(moonPivot);
@@ -348,20 +376,13 @@
                 varying vec2 vUv;
                 varying vec3 vNormal;
                 uniform float time;
-                
-                // 2D Random function
-                float random(vec2 st) {
-                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-                }
-
+                float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
                 void main() {
                     vUv = uv;
                     vNormal = normalize(normalMatrix * normal);
-                    
                     vec3 pos = position;
                     float displacement = (random(pos.xy * 0.1 + time * 0.1)) * 0.5;
                     pos += normal * displacement;
-
                     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                 }
             `;
@@ -371,8 +392,6 @@
                 varying vec3 vNormal;
                 uniform float time;
                 uniform float opacity;
-                
-                // Simplex 2D noise
                 vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
                 float snoise(vec2 v) {
                     const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
@@ -395,40 +414,26 @@
                     g.yz = a0.yz * x12.xz + h.yz * x12.yw;
                     return 130.0 * dot(m, g);
                 }
-
                 void main() {
                     float noise = snoise(vUv * vec2(10.0, 1.0) + vec2(0.0, -time * 0.3));
                     noise = pow(noise, 2.0);
-                    
-                    vec3 color = vec3(0.4, 1.0, 0.6) * noise; // Greenish
-                    
+                    vec3 color = vec3(0.4, 1.0, 0.6) * noise;
                     float edge = 1.0 - abs(vNormal.z);
-                    
                     gl_FragColor = vec4(color, edge * opacity * 0.8);
                 }
             `;
 
             const auroraMaterial = new THREE.ShaderMaterial({
-                uniforms: {
-                    time: { value: 0.0 },
-                    opacity: { value: 0.0 }
-                },
-                vertexShader,
-                fragmentShader,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                side: THREE.DoubleSide,
-                depthWrite: false
+                uniforms: { time: { value: 0.0 }, opacity: { value: 0.0 } },
+                vertexShader, fragmentShader, transparent: true,
+                blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false
             });
             
             const auroraMesh = new THREE.Mesh(auroraGeometry, auroraMaterial);
             auroraMesh.rotation.x = Math.PI / 2;
-            auroraMesh.position.y = planetData.size * 0.8; // North pole
+            auroraMesh.position.y = planetData.size * 0.8;
             
-            return {
-                mesh: auroraMesh,
-                intensity: 0.0
-            };
+            return { mesh: auroraMesh, intensity: 0.0 };
         }
 
         function launchCME() {
@@ -456,11 +461,8 @@
             const direction = hotspotDirection.clone();
 
             const hotspotMaterial = new THREE.SpriteMaterial({
-                map: createHotspotTexture(),
-                color: 0xffffff,
-                blending: THREE.AdditiveBlending,
-                transparent: true,
-                opacity: 0.9
+                map: createHotspotTexture(), color: 0xffffff, blending: THREE.AdditiveBlending,
+                transparent: true, opacity: 0.9
             });
             hotspotMesh = new THREE.Sprite(hotspotMaterial);
             hotspotMesh.position.copy(hotspotDirection).multiplyScalar(51);
@@ -470,8 +472,7 @@
             for (let i = 0; i < particleCount; i++) {
                  const startPos = hotspotDirection.clone()
                     .add(new THREE.Vector3().randomDirection().multiplyScalar(Math.random() * 0.15))
-                    .normalize()
-                    .multiplyScalar(52 + Math.random() * 2);
+                    .normalize().multiplyScalar(52 + Math.random() * 2);
                 startPos.toArray(positions, i * 3);
 
                 let velocity = new THREE.Vector3().randomDirection().multiplyScalar(Math.random() * spreadFactor);
@@ -489,12 +490,8 @@
             particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
             
             const particleMaterial = new THREE.PointsMaterial({
-                size: 2.5,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.9,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false
+                size: 2.5, vertexColors: true, transparent: true, opacity: 0.9,
+                blending: THREE.AdditiveBlending, depthWrite: false
             });
 
             cmeParticles = new THREE.Points(particlesGeometry, particleMaterial);
@@ -511,9 +508,7 @@
 
             planets.forEach(p => {
                 p.pivot.rotation.y += p.speed * 0.1;
-                if (p.name === 'Earth' && p.moonPivot) {
-                    p.moonPivot.rotation.y += 0.05;
-                }
+                if (p.name === 'Earth' && p.moonPivot) p.moonPivot.rotation.y += 0.05;
 
                 if(p.aurora){
                     p.aurora.mesh.material.uniforms.time.value += 0.01;
@@ -523,25 +518,20 @@
             });
 
             if (cmeActive) {
-                if (hotspotMesh) {
-                    hotspotMesh.material.opacity *= 0.985;
-                }
+                if (hotspotMesh) hotspotMesh.material.opacity *= 0.985;
                 if (cmeParticles) {
                     const positions = cmeParticles.geometry.attributes.position;
                     const opacities = cmeParticles.geometry.attributes.alpha;
                     const PARTICLE_COUNT = positions.count;
 
-                    // Aurora collision detection
                     const earthData = planets.find(p => p.name === 'Earth');
                     if(earthData) {
                         earthData.mesh.getWorldPosition(planetWorldPosition);
                         const hitRadius = earthData.size + 10;
-
                         for (let i = 0; i < PARTICLE_COUNT; i++) {
                            particlePosition.fromArray(positions.array, i * 3);
                            if (particlePosition.distanceTo(planetWorldPosition) < hitRadius) {
                                earthData.aurora.intensity = Math.min(1.0, earthData.aurora.intensity + 0.05);
-                               // Make particle disappear on hit
                                opacities.array[i] = 0;
                            }
                         }
@@ -578,10 +568,11 @@
         }
 
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const canvasContainer = document.getElementById('bg-canvas');
+            camera.aspect = canvasContainer.offsetWidth / canvasContainer.offsetHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
+            labelRenderer.setSize(canvasContainer.offsetWidth, canvasContainer.offsetHeight);
         }
 
         init();
