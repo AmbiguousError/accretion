@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jupiter Accretion Simulation</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000011;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            /* Added position relative to anchor the landing screen */
+            position: relative; 
+        }
+        
+        /* --- NEW: Landing Screen Styles --- */
+        #landing-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 17, 0.9); /* Semi-transparent overlay */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 10; /* Make sure it's on top */
+            padding: 2rem;
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+        #landing-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ffaa44;
+        }
+        #landing-screen p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        /* --- End of New Styles --- */
+
+        #simulation-container {
+            width: 100%;
+            height: 90%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        #controls {
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            /* z-index to keep controls accessible, though they are below the sim */
+            z-index: 1; 
+        }
+        button {
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            /* z-index to make sure button is clickable on landing screen */
+            z-index: 11; 
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        
+        /* --- NEW: Move reset button to landing screen style --- */
+        #landing-screen #resetButton {
+            display: none; /* Hide reset button initially */
+            background-color: #888;
+        }
+        #landing-screen #resetButton:hover {
+            background-color: #666;
+        }
+
+    </style>
+    <!-- Import required libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+</head>
+<body>
+
+    <!-- NEW: Landing Screen HTML -->
+    <div id="landing-screen">
+        <h1>Jupiter Accretion</h1>
+        <p>Watch as a central mass, representing a young Jupiter, pulls in surrounding dust and particles through gravitational force, demonstrating the process of planetary accretion.</p>
+        <div id="landing-controls" style="display: flex; gap: 1rem;">
+             <!-- The buttons are now inside the landing screen for better control -->
+            <button id="startButton">Start Simulation</button>
+            <button id="resetButton">Reset</button>
+        </div>
+    </div>
+
+    <div id="simulation-container">
+        <!-- Canvas will be inserted here by three.js -->
+    </div>
+    
+    <!-- OLD controls div removed, as buttons are now in the landing screen -->
+    <!-- 
+    <div id="controls">
+        ...
+    </div> 
+    -->
+
+    <script>
+        // --- Global Variables ---
+        let scene, camera, renderer, world;
+        let jupiterBody, jupiterMesh;
+        const dustBodies = [];
+        const dustMeshes = [];
+        let simulationRunning = false;
+
+        const GRAVITATIONAL_CONSTANT = 0.5; // Gravitational constant (scaled for simulation)
+        const container = document.getElementById('simulation-container');
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        
+        // NEW: Get reference to landing screen
+        const landingScreen = document.getElementById('landing-screen');
+
+        // --- Initialization ---
+        function init() {
+            // Reset state
+            simulationRunning = false;
+            
+            // NEW: Control button and screen visibility
+            startButton.disabled = false;
+            startButton.textContent = 'Start Simulation';
+            startButton.style.display = 'inline-block';
+            resetButton.style.display = 'none'; // Hide reset button
+            landingScreen.style.display = 'flex'; // Show landing screen
+
+            dustBodies.length = 0;
+            dustMeshes.length = 0;
+            if (renderer) {
+                // Clear renderer if it exists
+                if (renderer.domElement.parentElement) {
+                    renderer.domElement.parentElement.removeChild(renderer.domElement);
+                }
+                renderer.dispose();
+            }
+
+            // 1. Setup Three.js Scene
+            scene = new THREE.Scene();
+            
+            // 2. Setup Camera
+            const aspect = container.clientWidth / container.clientHeight;
+            camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+            camera.position.z = 50;
+
+            // 3. Setup Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // 4. Setup Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffffff, 1, 500);
+            pointLight.position.set(0, 0, 0);
+            scene.add(pointLight);
+
+            // 5. Setup Cannon.js Physics World
+            world = new CANNON.World();
+            world.gravity.set(0, 0, 0); // We will apply custom gravity
+
+            // --- Create Bodies ---
+
+            // Jupiter (as a central heavy body)
+            const jupiterMass = 500;
+            const jupiterRadius = 5;
+            const jupiterShape = new CANNON.Sphere(jupiterRadius);
+            jupiterBody = new CANNON.Body({ mass: jupiterMass, shape: jupiterShape });
+            jupiterBody.position.set(0, 0, 0);
+            world.addBody(jupiterBody);
+
+            const jupiterGeo = new THREE.SphereGeometry(jupiterRadius, 32, 32);
+            const jupiterMat = new THREE.MeshPhongMaterial({ color: 0xffaa44, emissive: 0xcc8822, emissiveIntensity: 0.5 });
+            jupiterMesh = new THREE.Mesh(jupiterGeo, jupiterMat);
+            scene.add(jupiterMesh);
+
+            // Dust Particles
+            const numDust = 200;
+            for (let i = 0; i < numDust; i++) {
+                const radius = Math.random() * 0.3 + 0.1;
+                const mass = radius * 5;
+                const shape = new CANNON.Sphere(radius);
+                const body = new CANNON.Body({ mass: mass, shape: shape });
+
+                // Random initial position in a disk
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 30 + 15;
+                body.position.set(
+                    Math.cos(angle) * dist,
+                    Math.sin(angle) * dist,
+                    (Math.random() - 0.5) * 5
+                );
+
+                // Give it some initial tangential velocity
+                const tangent = new CANNON.Vec3(-body.position.y, body.position.x, 0);
+                tangent.normalize();
+                const speed = Math.sqrt(GRAVITATIONAL_CONSTANT * jupiterMass / dist) * 0.7; // A bit less than stable orbit
+                tangent.scale(speed, body.velocity);
+                
+                world.addBody(body);
+                dustBodies.push(body);
+
+                // Corresponding three.js mesh
+                const geo = new THREE.SphereGeometry(radius, 8, 8);
+                const mat = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(body.position);
+                scene.add(mesh);
+                dustMeshes.push(mesh);
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // --- Event Handlers ---
+        startButton.addEventListener('click', () => {
+            if (!simulationRunning) {
+                simulationRunning = true;
+                
+                // NEW: Hide landing screen and swap buttons
+                landingScreen.style.display = 'none';
+                startButton.style.display = 'none';
+                resetButton.style.display = 'inline-block';
+                
+                // This is the first call that "primes the pump"
+                // and starts the animation loop.
+                animate();
+            }
+        });
+
+        resetButton.addEventListener('click', () => {
+            // Stop the old loop
+            simulationRunning = false; 
+            // Re-initialize everything (which will show the landing screen again)
+            init();
+        });
+
+        function onWindowResize() {
+            // Check if renderer exists before resizing
+            if (!renderer) return; 
+            
+            const aspect = container.clientWidth / container.clientHeight;
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            // If the simulation is stopped (e.g., by Reset),
+            // this guard clause will prevent the loop from continuing.
+            if (!simulationRunning) {
+                return;
+            }
+
+            // This line is crucial. It tells the browser to call
+            // `animate` again on the next available frame, creating the loop.
+            requestAnimationFrame(animate);
+
+            // 1. Step the physics world
+            world.step(1 / 60); // Advance physics by 1/60th of a second
+
+            // 2. Apply custom gravity
+            const gravityForce = new CANNON.Vec3();
+            dustBodies.forEach(body => {
+                // Calculate vector from dust to Jupiter
+                const vec = jupiterBody.position.vsub(body.position);
+                const distanceSq = Math.max(vec.norm2(), 25); // Clamp distance to avoid extreme forces
+                
+                // Calculate force strength: F = G * (m1 * m2) / r^2
+                const strength = (GRAVITATIONAL_CONSTANT * jupiterBody.mass * body.mass) / distanceSq;
+                
+                // Apply force
+                vec.normalize();
+                vec.scale(strength, gravityForce);
+                body.applyForce(gravityForce, body.position);
+            });
+
+            // 3. Update Three.js meshes from physics bodies
+            jupiterMesh.position.copy(jupiterBody.position);
+            jupiterMesh.quaternion.copy(jupiterBody.quaternion);
+
+            for (let i = 0; i < dustBodies.length; i++) {
+                dustMeshes[i].position.copy(dustBodies[i].position);
+                dustMeshes[i].quaternion.copy(dustBodies[i].quaternion);
+            }
+            
+            // 4. Rotate camera for a nice view
+            const time = Date.now() * 0.0001;
+            camera.position.x = Math.sin(time) * 50;
+            camera.position.z = Math.cos(time) * 50;
+            camera.lookAt(scene.position);
+
+            // 5. Render the scene
+            renderer.render(scene, camera);
+        }
+
+        // --- Start ---
+        init();
+
+    </script>
+</body>
+</html>
+
+
